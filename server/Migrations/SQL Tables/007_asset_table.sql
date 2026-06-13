@@ -1,4 +1,4 @@
-CREATE TABLE assets(
+CREATE TABLE asset(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     description TEXT NOT NULL,

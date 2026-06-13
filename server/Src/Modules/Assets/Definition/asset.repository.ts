@@ -1,22 +1,22 @@
 import type { QueryResult } from "pg";
 import type { Database } from "../../../Config/Db.js";
 import type {
-  Assets,
-  AssetsRepository,
-  createAssetsDTO,
-  updateAssetsDTO,
-} from "./assets.types.js";
+  Asset,
+  AssetRepository,
+  createAssetDTO,
+  updateAssetDTO,
+} from "./asset.types.js";
 
-export class AssetsRepo implements AssetsRepository {
+export class AssetsRepo implements AssetRepository {
   constructor(private db: Database) {}
 
-  async createAssets(
+  async createAsset(
     department_id: string,
-    assetDetails: createAssetsDTO,
-  ): Promise<Assets> {
+    assetDetails: createAssetDTO,
+  ): Promise<Asset> {
     try {
       const sqlString: string =
-          "INSERT INTO assets(name,description,image,quantity,department_id) VALUES($1,$2,$3,$4,$5) RETURNING *",
+          "INSERT INTO asset(name,description,image,quantity,department_id) VALUES($1,$2,$3,$4,$5) RETURNING *",
         sqlQuery = await this.db.query(sqlString, [
           assetDetails.name,
           assetDetails.description,
@@ -27,7 +27,7 @@ export class AssetsRepo implements AssetsRepository {
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const insertion = sqlQuery as QueryResult<Assets>,
+      const insertion = sqlQuery as QueryResult<Asset>,
         newAssets = insertion.rows[0];
 
       return newAssets!;
@@ -36,10 +36,10 @@ export class AssetsRepo implements AssetsRepository {
     }
   }
 
-  async editAssets(
+  async editAsset(
     assetsId: string,
-    newAssetDetails: updateAssetsDTO,
-  ): Promise<Assets> {
+    newAssetDetails: updateAssetDTO,
+  ): Promise<Asset> {
     try {
       const date = new Date();
 
@@ -49,18 +49,18 @@ export class AssetsRepo implements AssetsRepository {
 
       for (const key in newAssetDetails) {
         keys.push(`${key}=$${paramIndex++}`);
-        values.push(newAssetDetails[key as keyof createAssetsDTO]);
+        values.push(newAssetDetails[key as keyof createAssetDTO]);
       }
 
       keys.push(`last_updated=$${paramIndex++}`);
       values.push(date.toUTCString());
 
-      const sqlString: string = `UPDATE assets SET ${keys.join(",")} WHERE id=$1 RETURING *`,
+      const sqlString: string = `UPDATE asset SET ${keys.join(",")} WHERE id=$1 RETURING *`,
         sqlQuery = await this.db.query(sqlString, [assetsId, ...values]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const edition = sqlQuery as QueryResult<Assets>,
+      const edition = sqlQuery as QueryResult<Asset>,
         edit = edition.rows[0];
 
       return edit!;
@@ -69,14 +69,14 @@ export class AssetsRepo implements AssetsRepository {
     }
   }
 
-  async getAssets(assetsId: string): Promise<Assets> {
+  async getAsset(assetsId: string): Promise<Asset> {
     try {
-      const sqlString: string = "SELECT * FROM assets WHERE id=$1",
+      const sqlString: string = "SELECT * FROM asset WHERE id=$1",
         sqlQuery = await this.db.query(sqlString, [assetsId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const retrieval = sqlQuery as QueryResult<Assets>,
+      const retrieval = sqlQuery as QueryResult<Asset>,
         retrieved = retrieval.rows[0];
 
       return retrieved!;
@@ -85,14 +85,14 @@ export class AssetsRepo implements AssetsRepository {
     }
   }
 
-  async getDepartmentAssets(department_id: string): Promise<Assets[]> {
+  async getDepartmentAssets(department_id: string): Promise<Asset[]> {
     try {
-      const sqlString: string = "SELECT * FROM assets WHERE department_id=$1",
+      const sqlString: string = "SELECT * FROM asset WHERE department_id=$1",
         sqlQuery = await this.db.query(sqlString, [department_id]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const retrieval = sqlQuery as QueryResult<Assets>,
+      const retrieval = sqlQuery as QueryResult<Asset>,
         retrievedDepartmentAssets = retrieval.rows;
 
       return retrievedDepartmentAssets;
@@ -101,9 +101,9 @@ export class AssetsRepo implements AssetsRepository {
     }
   }
 
-  async deleteAssets(assetId: string): Promise<void> {
+  async deleteAsset(assetId: string): Promise<void> {
     try {
-      const sqlString: string = "DELETE FROM assets WHERE id=$1";
+      const sqlString: string = "DELETE FROM asset WHERE id=$1";
 
       await this.db.query(sqlString, [assetId]);
     } catch (error) {

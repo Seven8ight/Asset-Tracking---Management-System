@@ -26,13 +26,13 @@ export const AssetsController = async (
 
         if (getPathname == "department")
           requestBody = await service.getDepartmentAssets(user.departmentId);
-        else requestBody = await service.getAssets(getPathname);
+        else requestBody = await service.getAsset(getPathname);
 
         sendResponseMessage(200, false, requestBody, response);
         break;
       case "POST":
         const postDetails: any = await getRequestBody(request),
-          assetsCreation = await service.createAssets(
+          assetsCreation = await service.createAsset(
             user.departmentId,
             postDetails,
           );
@@ -42,14 +42,14 @@ export const AssetsController = async (
       case "PATCH":
         const assetsId = PathnameValidator(pathnames),
           patchDetails: any = await getRequestBody(request),
-          assetsPatch = await service.editAssets(assetsId, patchDetails);
+          assetsPatch = await service.editAsset(assetsId, patchDetails);
 
         sendResponseMessage(200, false, assetsPatch, response);
         break;
       case "DELETE":
         const deleteAssetId = PathnameValidator(pathnames);
 
-        await service.deleteAssets(deleteAssetId);
+        await service.deleteAsset(deleteAssetId);
 
         sendResponseMessage(
           204,

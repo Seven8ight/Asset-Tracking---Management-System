@@ -1,23 +1,23 @@
 import type {
-  Assets,
-  AssetsRepository,
-  AssetsService,
-  createAssetsDTO,
-  updateAssetsDTO,
-} from "./assets.types.js";
+  Asset,
+  AssetRepository,
+  AssetService,
+  createAssetDTO,
+  updateAssetDTO,
+} from "./asset.types.js";
 
-export class AssetsServ implements AssetsService {
-  constructor(private repo: AssetsRepository) {}
+export class AssetsServ implements AssetService {
+  constructor(private repo: AssetRepository) {}
 
-  async createAssets(
+  async createAsset(
     department_id: string,
-    assetsDetails: createAssetsDTO,
-  ): Promise<Assets> {
+    assetsDetails: createAssetDTO,
+  ): Promise<Asset> {
     try {
       if (!department_id || !assetsDetails)
         throw new Error("Department id and asset details must be provided");
 
-      const allowedFields: (keyof createAssetsDTO)[] = [
+      const allowedFields: (keyof createAssetDTO)[] = [
         "description",
         "image",
         "name",
@@ -27,7 +27,7 @@ export class AssetsServ implements AssetsService {
       let filteredKeyValues: Record<string, any> = {};
 
       for (const key of allowedFields) {
-        const value = assetsDetails[key as keyof createAssetsDTO];
+        const value = assetsDetails[key as keyof createAssetDTO];
 
         if (value == undefined || value == null)
           throw new Error(`${key} has an invalid value`);
@@ -35,9 +35,9 @@ export class AssetsServ implements AssetsService {
         filteredKeyValues[key] = value;
       }
 
-      const newAsset = this.repo.createAssets(
+      const newAsset = this.repo.createAsset(
         department_id,
-        filteredKeyValues as createAssetsDTO,
+        filteredKeyValues as createAssetDTO,
       );
 
       return newAsset;
@@ -46,15 +46,15 @@ export class AssetsServ implements AssetsService {
     }
   }
 
-  async editAssets(
+  async editAsset(
     assetsId: string,
-    newAssetDetails: updateAssetsDTO,
-  ): Promise<Assets> {
+    newAssetDetails: updateAssetDTO,
+  ): Promise<Asset> {
     try {
       if (!assetsId || !newAssetDetails)
         throw new Error("Department id and asset details must be provided");
 
-      const allowedFields: (keyof createAssetsDTO)[] = [
+      const allowedFields: (keyof createAssetDTO)[] = [
         "description",
         "image",
         "name",
@@ -64,7 +64,7 @@ export class AssetsServ implements AssetsService {
       let filteredKeyValues: Record<string, any> = {};
 
       for (const key of allowedFields) {
-        const value = newAssetDetails[key as keyof createAssetsDTO];
+        const value = newAssetDetails[key as keyof createAssetDTO];
 
         if (value == undefined || value == null)
           throw new Error(`${key} has an invalid value`);
@@ -72,9 +72,9 @@ export class AssetsServ implements AssetsService {
         filteredKeyValues[key] = value;
       }
 
-      const patchAsset = this.repo.editAssets(
+      const patchAsset = this.repo.editAsset(
         assetsId,
-        filteredKeyValues as updateAssetsDTO,
+        filteredKeyValues as updateAssetDTO,
       );
 
       return patchAsset;
@@ -83,11 +83,11 @@ export class AssetsServ implements AssetsService {
     }
   }
 
-  async getAssets(assetsId: string): Promise<Assets> {
+  async getAsset(assetsId: string): Promise<Asset> {
     try {
       if (!assetsId) throw new Error("Assets id must be provided");
 
-      const assets = await this.repo.getAssets(assetsId);
+      const assets = await this.repo.getAsset(assetsId);
 
       return assets;
     } catch (error) {
@@ -95,7 +95,7 @@ export class AssetsServ implements AssetsService {
     }
   }
 
-  async getDepartmentAssets(department_id: string): Promise<Assets[]> {
+  async getDepartmentAssets(department_id: string): Promise<Asset[]> {
     try {
       if (!department_id) throw new Error("Department id must be provided");
 
@@ -108,11 +108,11 @@ export class AssetsServ implements AssetsService {
     }
   }
 
-  async deleteAssets(assetId: string): Promise<void> {
+  async deleteAsset(assetId: string): Promise<void> {
     try {
       if (!assetId) throw new Error("asseets id must be provided");
 
-      await this.repo.deleteAssets(assetId);
+      await this.repo.deleteAsset(assetId);
     } catch (error) {
       throw error;
     }

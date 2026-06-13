@@ -1,6 +1,10 @@
 import { Database } from "../Config/Db.js";
-import { AssetsRepo } from "../Modules/Assets/Definition/assets.repository.js";
-import { AssetsServ } from "../Modules/Assets/Definition/assets.service.js";
+import { AssetRepo } from "../Modules/Assets/Individual Asset/individual_asset.repository.js";
+import { AssetServ } from "../Modules/Assets/Individual Asset/individual_asset.service.js";
+import { AssetAssignmentRepo } from "../Modules/Assets/Assignments/asset_assignment.repository.js";
+import { AssetAssignmentServ } from "../Modules/Assets/Assignments/asset_assignment.service.js";
+import { AssetsRepo } from "../Modules/Assets/Definition/asset.repository.js";
+import { AssetsServ } from "../Modules/Assets/Definition/asset.service.js";
 import { LogRepo } from "../Modules/Audit Logs/log.repository.js";
 import { LogServ } from "../Modules/Audit Logs/log.service.js";
 import { DepartmentRepo } from "../Modules/Department/department.repository.js";
@@ -20,6 +24,8 @@ const Db = new Database();
 
 const departmentRepo = new DepartmentRepo(Db),
   assetsRepo = new AssetsRepo(Db),
+  assetRepo = new AssetRepo(Db),
+  assetAssignmentsRepo = new AssetAssignmentRepo(Db),
   userRepo = new UserRepo(Db),
   rolesRepo = new RoleRepo(Db),
   userRolesRepo = new UserRoleRepo(Db),
@@ -29,6 +35,8 @@ const departmentRepo = new DepartmentRepo(Db),
 
 export const DepartmentService = new DepartmentServ(departmentRepo),
   assetsService = new AssetsServ(assetsRepo),
+  assetAssignmentsServ = new AssetAssignmentServ(assetAssignmentsRepo),
+  assetServ = new AssetServ(assetRepo),
   userServ = new UserServ(userRepo),
   rolesService = new Roleservice(rolesRepo),
   userRolesServ = new UserRolesServ(userRolesRepo),
