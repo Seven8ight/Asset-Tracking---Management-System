@@ -21,14 +21,14 @@ export const DepartmentController = async (
         const pathname = PathnameValidator(pathnames);
         let requestBody: any;
 
-        if (pathname == "all") requestBody = service.getAllDepartments();
-        else requestBody = service.getDepartment(pathname);
+        if (pathname == "all") requestBody = await service.getAllDepartments();
+        else requestBody = await service.getDepartment(pathname);
 
         sendResponseMessage(200, false, requestBody, response);
         break;
       case "POST":
         const postDepartmentDetails: any = await getRequestBody(request),
-          newDepartment = service.createDepartment(postDepartmentDetails);
+          newDepartment = await service.createDepartment(postDepartmentDetails);
 
         sendResponseMessage(201, false, newDepartment, response);
         break;
@@ -48,7 +48,7 @@ export const DepartmentController = async (
         await service.deleteDepartment(deleteDepartmentId);
 
         sendResponseMessage(
-          200,
+          204,
           false,
           `${deleteDepartmentId} department deleted successfully`,
           response,
@@ -59,6 +59,6 @@ export const DepartmentController = async (
         break;
     }
   } catch (error) {
-    throw error;
+    sendResponseMessage(400, true, (error as Error).message, response);
   }
 };

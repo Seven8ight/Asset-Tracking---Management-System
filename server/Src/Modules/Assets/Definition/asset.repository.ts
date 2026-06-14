@@ -6,8 +6,9 @@ import type {
   createAssetDTO,
   updateAssetDTO,
 } from "./asset.types.js";
+import { individualAssetServ } from "../../../Data Objects/DTO.js";
 
-export class AssetsRepo implements AssetRepository {
+export class AssetRepo implements AssetRepository {
   constructor(private db: Database) {}
 
   async createAsset(
@@ -28,9 +29,15 @@ export class AssetsRepo implements AssetRepository {
       if (!sqlQuery) throw new Error("SQL Query error");
 
       const insertion = sqlQuery as QueryResult<Asset>,
-        newAssets = insertion.rows[0];
+        newAsset = insertion.rows[0];
 
-      return newAssets!;
+      for (let i = 0; i <= assetDetails.quantity; i++)
+        await individualAssetServ.createIndividualAsset(
+          department_id,
+          newAsset!.id,
+        );
+
+      return newAsset!;
     } catch (error) {
       throw error;
     }

@@ -5,7 +5,7 @@ import type {
   updateIndividualAssetDTO,
 } from "./individual_asset.types.js";
 
-export class AssetServ implements AssetService {
+export class IndividualAssetServ implements AssetService {
   constructor(private repo: AssetRepository) {}
 
   async createIndividualAsset(

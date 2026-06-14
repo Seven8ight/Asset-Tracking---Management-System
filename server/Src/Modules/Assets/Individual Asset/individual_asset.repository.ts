@@ -6,7 +6,7 @@ import type {
   updateIndividualAssetDTO,
 } from "./individual_asset.types.js";
 
-export class AssetRepo implements AssetRepository {
+export class IndividualAssetRepo implements AssetRepository {
   constructor(private db: Database) {}
 
   async createIndividualAsset(
@@ -14,7 +14,7 @@ export class AssetRepo implements AssetRepository {
     assetsId: string,
   ): Promise<IndividualAsset> {
     try {
-      const sqlString: string = `INSERT INTO asset(department_id,asset_id) VALUES($1,$2) RETURNING *`,
+      const sqlString: string = `INSERT INTO individual_asset(department_id,asset_id) VALUES($1,$2) RETURNING *`,
         sqlQuery = await this.db.query(sqlString, [departmentId, assetsId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");

@@ -4,17 +4,17 @@ import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
-import { assetsService } from "../../../Data Objects/DTO.js";
+import { assetService } from "../../../Data Objects/DTO.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
 
-export const AssetsController = async (
+export const AssetController = async (
   request: IncomingMessage,
   response: ServerResponse<IncomingMessage>,
 ) => {
   const requestUrl = new URL(request.url!, `http://${request.headers.host}`),
     pathnames = requestUrl.pathname.split("/").filter(Boolean);
 
-  const service = assetsService;
+  const service = assetService;
 
   try {
     const user = AuthValidator(request);
@@ -62,5 +62,7 @@ export const AssetsController = async (
         sendResponseMessage(400, true, "Invalid HTTP header method", response);
         break;
     }
-  } catch (error) {}
+  } catch (error) {
+    sendResponseMessage(400, true, (error as Error).message, response);
+  }
 };

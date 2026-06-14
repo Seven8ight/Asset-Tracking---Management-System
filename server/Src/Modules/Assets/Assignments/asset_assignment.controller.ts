@@ -7,7 +7,7 @@ import {
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
 
-export const Assignments = async (
+export const AssignmentsController = async (
   request: IncomingMessage,
   response: ServerResponse<IncomingMessage>,
 ) => {
