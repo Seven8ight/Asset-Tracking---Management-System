@@ -12,7 +12,6 @@ export class UserRolesServ implements UserRoleService {
 
   async createUserRole(userId: string, roleId: string): Promise<UserRole> {
     try {
-      console.log(userId + " : " + roleId);
       if (!userId || !roleId)
         throw new Error("Incomplete credentials provided");
 

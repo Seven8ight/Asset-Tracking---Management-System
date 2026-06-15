@@ -4,9 +4,12 @@ import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../Utilities/HttpFunctions.js";
-import { authService } from "../../Data Objects/DTO.js";
+import { authService, logsServ, userServ } from "../../Data Objects/DTO.js";
 import { REDIRECT_URL } from "../../Config/Env.js";
 import { sendMemberInvitation } from "../../Utilities/MailSender.js";
+import { AuthValidator } from "../../Middleware/AuthChecker.js";
+import { decode_access_token } from "../../Utilities/Jwt.js";
+import type { PublicUser } from "../Users/user.types.js";
 
 // {
 //   "username":"lorenzo",
@@ -56,13 +59,34 @@ export const AuthenticationController = async (
         sendResponseMessage(201, false, newAccessToken, response);
         break;
       case "invite":
+        const user = AuthValidator(request);
+
+        if (user.departmentId == null || !user.departmentId)
+          return sendResponseMessage(
+            400,
+            true,
+            "You should belong to a department first",
+            response,
+          );
+
         const userPostDetails: any = await getRequestBody(request),
-          invitedUser = await authService.register(userPostDetails);
+          invitedUser = await authService.register(userPostDetails),
+          decodedUser = decode_access_token(
+            invitedUser.accessToken,
+          ) as PublicUser;
 
         await sendMemberInvitation(
           userPostDetails,
           `${REDIRECT_URL}/invite?token=${invitedUser.refreshToken}`,
         );
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: decodedUser.id,
+          entity_type: "User invititation",
+          action: `User invite to department, ${user.departmentId}`,
+          old_values: {},
+          new_values: {},
+        });
 
         sendResponseMessage(200, false, invitedUser, response);
         break;

@@ -5,7 +5,7 @@ import {
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
-import { rolesService } from "../../../Data Objects/DTO.js";
+import { logsServ, rolesService } from "../../../Data Objects/DTO.js";
 
 export const RoleController = async (
   request: IncomingMessage,
@@ -17,7 +17,7 @@ export const RoleController = async (
   const service = rolesService;
 
   try {
-    AuthValidator(request);
+    const user = AuthValidator(request);
 
     switch (request.method) {
       case "GET":
@@ -45,19 +45,50 @@ export const RoleController = async (
         break;
       case "POST":
         const postRoleBody: any = await getRequestBody(request),
-          createRole = await service.createRole(postRoleBody);
+          createRole = await service.createRole(
+            postRoleBody,
+            user.departmentId,
+          );
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: createRole.id,
+          entity_type: "Role item",
+          action: "Creating a role",
+          old_values: {},
+          new_values: createRole,
+        });
 
         sendResponseMessage(201, false, createRole, response);
         break;
       case "PATCH":
-        const patchRoleBody: any = await getRequestBody(request),
-          updateRole = await service.editRole(patchRoleBody.id, patchRoleBody);
+        const patchRoleId = PathnameValidator(pathNames),
+          patchRoleBody: any = await getRequestBody(request),
+          beforeUpdateRole = await service.getRole(patchRoleId),
+          updateRole = await service.editRole(patchRoleId, patchRoleBody);
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: updateRole.id,
+          entity_type: "Role item",
+          action: "Editing a role",
+          old_values: beforeUpdateRole,
+          new_values: updateRole,
+        });
 
         sendResponseMessage(200, false, updateRole, response);
         break;
       case "DELETE":
-        const deleteRoleBody: any = await getRequestBody(request);
-        await service.deleteRole(deleteRoleBody.id);
+        const deleteRoleId: string = PathnameValidator(pathNames),
+          beforeDeletionRole = await service.getRole(deleteRoleId);
+
+        await service.deleteRole(deleteRoleId);
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: deleteRoleId,
+          entity_type: "Role item",
+          action: "Deleting a role",
+          old_values: beforeDeletionRole,
+          new_values: {},
+        });
 
         sendResponseMessage(204, false, "Deletion successfully", response);
         break;

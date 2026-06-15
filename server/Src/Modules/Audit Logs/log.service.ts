@@ -20,7 +20,7 @@ export class LogServ implements LogService {
         );
 
       const allowedFields: (keyof createLogDTO)[] = [
-        "action_type",
+        "action",
         "entity_id",
         "entity_type",
         "new_values",
@@ -28,7 +28,7 @@ export class LogServ implements LogService {
       ];
 
       let filteredLogValues: Record<string, any> = {};
-      for (const key in allowedFields) {
+      for (const key of allowedFields) {
         const value = newDetails[key as keyof createLogDTO];
 
         if (value === undefined || value == null)

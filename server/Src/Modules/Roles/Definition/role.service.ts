@@ -11,12 +11,18 @@ import type {
 export class Roleservice implements RoleService {
   constructor(private roleRepo: RoleRepository) {}
 
-  async createRole(details: createRoleDTO): Promise<Role> {
+  async createRole(
+    details: createRoleDTO,
+    departmentId: string,
+  ): Promise<Role> {
     try {
       if (details.name.length <= 0 || details.description.length <= 0)
         throw new Error("Name and description length invalid");
 
-      const createRole = await this.roleRepo.createRole(details);
+      if (!departmentId) throw new Error("Department id must be provided");
+
+      const createRole = await this.roleRepo.createRole(details, departmentId);
+
       return createRole;
     } catch (error) {
       Warning("Error occured at create role");
@@ -45,6 +51,18 @@ export class Roleservice implements RoleService {
       return updateQuery;
     } catch (error) {
       Warning("Error occured at create role");
+      throw error;
+    }
+  }
+
+  async getRole(roleId: string): Promise<Role> {
+    try {
+      if (!roleId) throw new Error("Role id must be provided");
+
+      const role = await this.roleRepo.getRole(roleId);
+
+      return role;
+    } catch (error) {
       throw error;
     }
   }

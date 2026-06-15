@@ -30,7 +30,7 @@ export class UserRoleRepo implements UserRoleRepository {
 
   async getUserRoles(userId: string): Promise<UserSpecificRoles> {
     try {
-      const sqlString = `SELECT r.role_name FROM user_roles ur INNER JOIN roles r ON ur.role_id=r.id WHERE ur.user_id=$1`,
+      const sqlString = `SELECT r.name FROM user_roles ur INNER JOIN role r ON ur.role_id=r.id WHERE ur.user_id=$1`,
         sqlQuery = await this.db.query(sqlString, [userId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -54,8 +54,8 @@ export class UserRoleRepo implements UserRoleRepository {
     const sqlString = `
       SELECT
         r.id                AS "roleId",
-        r.role_name         AS "roleName",
-        r.role_description  AS "roleDescription",
+        r.name         AS "roleName",
+        r.description  AS "roleDescription",
         COALESCE(
           JSON_AGG(
             JSON_BUILD_OBJECT(
@@ -67,12 +67,12 @@ export class UserRoleRepo implements UserRoleRepository {
           '[]'
         ) AS permissions
       FROM user_roles ur
-      JOIN roles             r  ON r.id  = ur.role_id
+      JOIN role             r  ON r.id  = ur.role_id
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions      p  ON p.id = rp.permission_id
       WHERE ur.user_id = $1
-      GROUP BY r.id, r.role_name, r.role_description
-      ORDER BY r.role_name
+      GROUP BY r.id, r.name, r.description
+      ORDER BY r.name
     `,
       sqlQuery = await this.db.query(sqlString, [userId]);
 

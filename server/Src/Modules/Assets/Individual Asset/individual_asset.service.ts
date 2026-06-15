@@ -55,7 +55,7 @@ export class IndividualAssetServ implements AssetService {
           `No fields provided for updating the asset, ${assetId}`,
         );
 
-      const patchedAsset = await this.editIndividualAsset(
+      const patchedAsset = await this.repo.editIndividualAsset(
         assetId,
         filteredAssetDetails,
       );

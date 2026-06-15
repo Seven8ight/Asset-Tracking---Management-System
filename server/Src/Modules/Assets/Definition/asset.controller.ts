@@ -4,7 +4,7 @@ import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
-import { assetService } from "../../../Data Objects/DTO.js";
+import { assetService, logsServ } from "../../../Data Objects/DTO.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
 
 export const AssetController = async (
@@ -37,19 +37,45 @@ export const AssetController = async (
             postDetails,
           );
 
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: assetsCreation.id,
+          entity_type: "Asset item",
+          action: "Creating an asset",
+          old_values: {},
+          new_values: assetsCreation,
+        });
+
         sendResponseMessage(201, false, assetsCreation, response);
         break;
       case "PATCH":
         const assetsId = PathnameValidator(pathnames),
           patchDetails: any = await getRequestBody(request),
+          beforeUpdateAsset = await service.getAsset(assetsId),
           assetsPatch = await service.editAsset(assetsId, patchDetails);
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: assetsId,
+          entity_type: "Asset item",
+          action: "Editing an asset",
+          old_values: beforeUpdateAsset,
+          new_values: assetsPatch,
+        });
 
         sendResponseMessage(200, false, assetsPatch, response);
         break;
       case "DELETE":
-        const deleteAssetId = PathnameValidator(pathnames);
+        const deleteAssetId = PathnameValidator(pathnames),
+          beforeDeleteAsset = await service.getAsset(deleteAssetId);
 
         await service.deleteAsset(deleteAssetId);
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: deleteAssetId,
+          entity_type: "Asset item",
+          action: "Deleting an asset",
+          old_values: beforeDeleteAsset,
+          new_values: {},
+        });
 
         sendResponseMessage(
           204,

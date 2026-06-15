@@ -4,7 +4,8 @@ import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../Utilities/HttpFunctions.js";
-import { DepartmentService } from "../../Data Objects/DTO.js";
+import { DepartmentService, logsServ } from "../../Data Objects/DTO.js";
+import { AuthValidator } from "../../Middleware/AuthChecker.js";
 
 export const DepartmentController = async (
   request: IncomingMessage,
@@ -16,6 +17,8 @@ export const DepartmentController = async (
   const service = DepartmentService;
 
   try {
+    const user = AuthValidator(request);
+
     switch (request.method) {
       case "GET":
         const pathname = PathnameValidator(pathnames);
@@ -30,20 +33,45 @@ export const DepartmentController = async (
         const postDepartmentDetails: any = await getRequestBody(request),
           newDepartment = await service.createDepartment(postDepartmentDetails);
 
+        await logsServ.createLog(newDepartment.id, user.userId, {
+          entity_id: newDepartment.id,
+          entity_type: "Department entity",
+          action: "Creating department",
+          old_values: {},
+          new_values: newDepartment,
+        });
+
         sendResponseMessage(201, false, newDepartment, response);
         break;
       case "PATCH":
         const patchDepartmentId = PathnameValidator(pathnames),
           patchDepartmentDetails: any = await getRequestBody(request),
+          originalDepartment = await service.getDepartment(patchDepartmentId),
           patchedDepartment = await service.editDepartment(
             patchDepartmentId,
             patchDepartmentDetails,
           );
 
+        await logsServ.createLog(patchDepartmentId, user.userId, {
+          entity_id: patchDepartmentId,
+          entity_type: "Department entity",
+          action: "Editing department",
+          old_values: originalDepartment,
+          new_values: patchedDepartment,
+        });
+
         sendResponseMessage(200, false, patchedDepartment, response);
         break;
       case "DELETE":
         const deleteDepartmentId = PathnameValidator(pathnames);
+
+        await logsServ.createLog(deleteDepartmentId, user.userId, {
+          entity_id: deleteDepartmentId,
+          entity_type: "Department entity",
+          action: "Deleting department",
+          old_values: await service.getDepartment(deleteDepartmentId),
+          new_values: {},
+        });
 
         await service.deleteDepartment(deleteDepartmentId);
 

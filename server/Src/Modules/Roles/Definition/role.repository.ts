@@ -12,14 +12,17 @@ import type {
 export class RoleRepo implements RoleRepository {
   constructor(private db: Database) {}
 
-  async createRole(details: createRoleDTO): Promise<Role> {
+  async createRole(
+    details: createRoleDTO,
+    departmentId: string,
+  ): Promise<Role> {
     try {
       const sqlString: string =
-          "INSERT INTO roles(name,description,tenant_id) VALUES($1,$2,$3) RETURNING *",
+          "INSERT INTO role(name,description,department_id) VALUES($1,$2,$3) RETURNING *",
         sqlQuery = await this.db.query(sqlString, [
           details.name,
           details.description,
-          details.tenant_id,
+          departmentId,
         ]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -45,7 +48,7 @@ export class RoleRepo implements RoleRepository {
         values.push(value);
       }
 
-      const sqlString: string = `UPDATE roles SET ${keys.join(",")} WHERE id=$1 RETURNING *`,
+      const sqlString: string = `UPDATE role SET ${keys.join(",")} WHERE id=$1 RETURNING *`,
         sqlQuery = await this.db.query(sqlString, [roleId, ...values]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -60,9 +63,25 @@ export class RoleRepo implements RoleRepository {
     }
   }
 
+  async getRole(roleId: string): Promise<Role> {
+    try {
+      const sqlString: string = "SELECT * FROM role WHERE id=$1",
+        sqlQuery = await this.db.query(sqlString, [roleId]);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
+
+      const roleQuery = sqlQuery as QueryResult<Role>,
+        role = roleQuery.rows[0];
+
+      return role!;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getRoles(): Promise<Role[]> {
     try {
-      const sqlString: string = "SELECT * FROM roles",
+      const sqlString: string = "SELECT * FROM role",
         sqlQuery = await this.db.query(sqlString);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -95,7 +114,7 @@ export class RoleRepo implements RoleRepository {
           ) FILTER (WHERE p.id IS NOT NULL),
           '[]'
         ) AS permissions
-      FROM roles r
+      FROM role r
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions      p  ON p.id = rp.permission_id
       WHERE r.id = $1
@@ -117,7 +136,7 @@ export class RoleRepo implements RoleRepository {
 
   async deleteRole(roleId: string): Promise<void> {
     try {
-      const sqlString: string = "DELETE FROM roles WHERE id=$1";
+      const sqlString: string = "DELETE FROM role WHERE id=$1";
 
       await this.db.query(sqlString, [roleId]);
     } catch (error) {

@@ -1,10 +1,10 @@
-import type { IncomingMessage, ServerResponse } from "http";
+import { ServerResponse, type IncomingMessage } from "http";
 import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
-import { userRolesServ } from "../../../Data Objects/DTO.js";
+import { logsServ, userRolesServ } from "../../../Data Objects/DTO.js";
 
 export const UserRoleController = async (
   request: IncomingMessage,
@@ -13,7 +13,7 @@ export const UserRoleController = async (
   const requestUrl = new URL(request.url!, `http://${request.headers.host}`),
     pathnames = requestUrl.pathname.split("/").filter(Boolean);
 
-  const userRoleServ = userRolesServ;
+  const service = userRolesServ;
 
   try {
     const user = AuthValidator(request);
@@ -23,11 +23,11 @@ export const UserRoleController = async (
         let requestBody: any;
 
         if (!pathnames[2])
-          requestBody = await userRoleServ.getUserRoles(user.userId);
+          requestBody = await service.getUserRoles(user.userId);
         else {
           const pathname = PathnameValidator(pathnames);
           if (pathname == "permissions")
-            requestBody = await userRoleServ.getUserRolesWithPermissions(
+            requestBody = await service.getUserRolesWithPermissions(
               user.userId,
             );
         }
@@ -37,17 +37,36 @@ export const UserRoleController = async (
       case "POST":
         const postRoleId = PathnameValidator(pathnames);
 
-        const createUserRole = await userRoleServ.createUserRole(
+        const createUserRole = await service.createUserRole(
           user.userId,
           postRoleId,
         );
 
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: postRoleId,
+          entity_type: "Role assignment",
+          action: "User being assigned a role",
+          old_values: {},
+          new_values: createUserRole,
+        });
+
         sendResponseMessage(201, false, createUserRole, response);
         break;
       case "DELETE":
-        const deleteRoleId = PathnameValidator(pathnames);
+        const deleteRoleId = PathnameValidator(pathnames),
+          beforeRevockation = await service.getUserRoles(user.userId);
 
-        await userRoleServ.deleteUserRole(user.userId, deleteRoleId);
+        await service.deleteUserRole(user.userId, deleteRoleId);
+
+        const afterRevockation = await service.getUserRoles(user.userId);
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: deleteRoleId,
+          entity_type: "Role revockation",
+          action: "User being revoked a role",
+          old_values: beforeRevockation,
+          new_values: afterRevockation,
+        });
 
         sendResponseMessage(204, false, "Deletion successful", response);
         break;
