@@ -72,17 +72,17 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex">
-
       {/* ── Sidebar ── */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 flex flex-col
+      <aside
+        className={`
+        fixed inset-y-0 left-0 z-50 w-60 flex flex-col
         bg-[#1E293B] border-r border-white/5
         transform transition-transform duration-200
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:relative lg:translate-x-0
-      `}>
-
-        {/* Logo */}
+        lg:relative lg:translate-x-0 lg:flex
+      `}
+      >
+        {/* Logo area */}
         <div className="h-16 flex items-center px-5 border-b border-white/5 flex-shrink-0">
           <Logo size="sm" />
         </div>
@@ -108,10 +108,11 @@ export default function DashboardLayout({
                 onClick={() => setSidebarOpen(false)}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
-                  font-medium transition-colors group
-                  ${active
-                    ? "bg-indigo-500/15 text-indigo-300"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                  font-medium transition-colors
+                  ${
+                    active
+                      ? "bg-indigo-500/15 text-indigo-300"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                   }
                 `}
               >
@@ -127,20 +128,25 @@ export default function DashboardLayout({
 
         {/* User profile at bottom */}
         <div className="p-3 border-t border-white/5 flex-shrink-0">
-          {/* User info */}
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1">
-            <div className="w-8 h-8 rounded-full bg-indigo-500/20 border
+          <div
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg
+                          hover:bg-white/5 cursor-pointer transition-colors"
+          >
+            {/* Avatar */}
+            <div
+              className="w-8 h-8 rounded-full bg-indigo-500/20 border 
                             border-indigo-500/30 flex items-center justify-center
-                            text-xs font-bold text-indigo-300 flex-shrink-0">
-              {MOCK_USER.initials}
+                            text-xs font-bold text-indigo-300"
+            >
+              JM
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-200 truncate">
-                {MOCK_USER.name}
-              </p>
-              <p className="text-xs text-slate-500">
-                {ROLE_LABELS[MOCK_USER.role]}
-              </p>
+              <div className="text-sm font-medium text-slate-200 truncate">
+                Jane Mwangi
+              </div>
+              <div className="text-xs text-slate-500 truncate">
+                Asset Manager
+              </div>
             </div>
           </div>
 
@@ -167,17 +173,18 @@ export default function DashboardLayout({
 
       {/* ── Main area ── */}
       <div className="flex-1 flex flex-col min-w-0">
-
-        {/* Topbar */}
-        <header className="h-16 flex items-center gap-4 px-6
-                           border-b border-white/5 bg-[#0F172A]/80
-                           backdrop-blur-md sticky top-0 z-30 flex-shrink-0">
-
+        {/* Top bar */}
+        <header
+          className="h-16 flex items-center justify-between px-6
+                           border-b border-white/5 bg-[#0F172A]/80 
+                           backdrop-blur-md sticky top-0 z-30 flex-shrink-0"
+        >
           {/* Mobile menu button */}
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 rounded-lg text-slate-400
-                       hover:text-slate-200 hover:bg-white/5 transition-colors">
+                       hover:text-slate-200 hover:bg-white/5 transition-colors"
+          >
             ☰
           </button>
 
@@ -191,27 +198,34 @@ export default function DashboardLayout({
             </p>
           </div>
 
-          {/* Notifications */}
-          <button className="relative p-2 rounded-lg text-slate-400
-                             hover:text-slate-200 hover:bg-white/5 transition-colors">
-            🔔
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5
-                             rounded-full bg-red-400" />
-          </button>
+          {/* Right side of topbar */}
+          <div className="flex items-center gap-3 ml-auto">
+            {/* Notification bell */}
+            <button
+              className="p-2 rounded-lg text-slate-400 hover:text-slate-200
+                               hover:bg-white/5 transition-colors relative"
+            >
+              🔔
+              {/* Red dot for unread notifications */}
+              <span
+                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 
+                               rounded-full bg-red-400"
+              />
+            </button>
 
-          {/* Avatar */}
-          <div className="w-8 h-8 rounded-full bg-indigo-500/20 border
-                          border-indigo-500/30 flex items-center justify-center
-                          text-xs font-bold text-indigo-300 cursor-pointer">
-            {MOCK_USER.initials}
+            {/* Avatar */}
+            <div
+              className="w-8 h-8 rounded-full bg-indigo-500/20 border 
+                            border-indigo-500/30 flex items-center justify-center
+                            text-xs font-bold text-indigo-300 cursor-pointer"
+            >
+              JM
+            </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          {children}
-        </main>
-
+        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
