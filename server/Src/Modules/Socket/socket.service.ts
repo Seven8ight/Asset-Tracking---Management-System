@@ -3,7 +3,7 @@ import type { AuthenticatedSocket, SocketIOService } from "./socket.types.js";
 import { Socket, Server as SocketServer, type ExtendedError } from "socket.io";
 import type { PublicUser } from "../Users/user.types.js";
 import { decode_access_token } from "../../Utilities/Jwt.js";
-import { assetServ, assetsService, assetsService } from "../../Data Objects/DTO.js";
+import { individualAssetServ, assetService, assetService } from "../../Data Objects/DTO.js";
 
 /*
     1. Ownership change to asset as per the department
@@ -43,7 +43,7 @@ export class SocketIO implements SocketIOService {
       const authenticatedSocket: AuthenticatedSocket = socket,
         { id, department_id } = authenticatedSocket.data.user;
 
-        const assetsServ = assetsService
+        const assetsServ = assetService
 
       socket.join(`Rooms:${department_id}`);
 
@@ -57,7 +57,7 @@ export class SocketIO implements SocketIOService {
             status: string;
           },
         ) => {
-            const asset = await assetServ.getIndividualAssets(assetsId)
+            const asset = await individualAssetServ.getIndividualAssets(assetsId)
             
           this.ioServer
             .to(`Rooms:${departmentId}`)

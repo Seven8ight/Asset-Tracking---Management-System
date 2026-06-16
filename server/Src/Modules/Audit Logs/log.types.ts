@@ -2,7 +2,7 @@ export type Log = {
   id: string;
   department_id: string;
   user_id: string;
-  action_type: string;
+  action: string;
   entity_id: string;
   entity_type: string;
   old_values: Record<string, any>;

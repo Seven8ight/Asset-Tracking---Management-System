@@ -1,3 +1,4 @@
+import { individualAssetServ } from "../../../Data Objects/DTO.js";
 import type {
   AssetAssignments,
   AssetAssignmentsRepository,
@@ -23,6 +24,10 @@ export class AssetAssignmentServ implements AssetAssignmentsService {
         userId,
       );
 
+      await individualAssetServ.editIndividualAsset(assetId, {
+        assigned: "in use",
+      });
+
       return assetAssignment;
     } catch (error) {
       throw error;
@@ -45,6 +50,10 @@ export class AssetAssignmentServ implements AssetAssignmentsService {
         assignmentId,
         newAssignmentDetails,
       );
+
+      await individualAssetServ.editIndividualAsset(editedAssignment.asset_id, {
+        assigned: "open",
+      });
 
       return editedAssignment;
     } catch (error) {

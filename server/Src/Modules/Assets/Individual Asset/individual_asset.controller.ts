@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { assetServ } from "../../../Data Objects/DTO.js";
+import { individualAssetServ } from "../../../Data Objects/DTO.js";
 import {
   getRequestBody,
   PathnameValidator,
@@ -7,14 +7,14 @@ import {
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
 
-export const AssetController = async (
+export const IndividualAssetController = async (
   request: IncomingMessage,
   response: ServerResponse<IncomingMessage>,
 ) => {
   const requestUrl = new URL(request.url!, `http://${request.headers.host}`),
     pathnames = requestUrl.pathname.split("/").filter(Boolean);
 
-  const service = assetServ;
+  const service = individualAssetServ;
 
   try {
     const user = AuthValidator(request);

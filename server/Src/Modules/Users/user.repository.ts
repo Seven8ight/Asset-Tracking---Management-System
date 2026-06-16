@@ -6,27 +6,19 @@ import type { updateUserDTO, User, UserRepository } from "./user.types.js";
 export class UserRepo implements UserRepository {
   constructor(private db: Database) {}
 
-  async editUser(
-    department_id: string,
-    userId: string,
-    newDetails: updateUserDTO,
-  ): Promise<User> {
+  async editUser(userId: string, newDetails: updateUserDTO): Promise<User> {
     try {
       let keys: string[] = [],
         values: string[] = [],
-        paramIndex: number = 3;
+        paramIndex: number = 2;
 
       for (let [key, value] of Object.entries(newDetails)) {
         keys.push(`${key}=$${paramIndex++}`);
         values.push(value);
       }
 
-      const sqlString: string = `UPDATE users SET ${keys.join(",")} WHERE department_id=$1 and user_id=$2`,
-        queryResult = await this.db.query(sqlString, [
-          department_id,
-          userId,
-          ...values,
-        ]);
+      const sqlString: string = `UPDATE users SET ${keys.join(",")} WHERE id=$1 RETURNING *`,
+        queryResult = await this.db.query(sqlString, [userId, ...values]);
 
       if (!queryResult) throw new Error(`Failed to update user, ${userId}`);
 
@@ -40,10 +32,10 @@ export class UserRepo implements UserRepository {
     }
   }
 
-  async getUser(department_id: string, userId: string): Promise<User> {
+  async getUser(userId: string): Promise<User> {
     try {
-      const sqlString = `SELECT * FROM users WHERE department_id=$1 and user_id=$2`,
-        queryResult = await this.db.query(sqlString, [department_id, userId]);
+      const sqlString = `SELECT * FROM users WHERE id=$1`,
+        queryResult = await this.db.query(sqlString, [userId]);
 
       if (!queryResult) throw new Error(`Failed to update user, ${userId}`);
 
@@ -61,7 +53,7 @@ export class UserRepo implements UserRepository {
     try {
       const date = new Date();
 
-      await this.editUser(department_id, userId, {
+      await this.editUser(userId, {
         deleted_at: date.toUTCString(),
       });
     } catch (error) {

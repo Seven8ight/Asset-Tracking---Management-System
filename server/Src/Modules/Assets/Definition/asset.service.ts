@@ -13,37 +13,39 @@ export class AssetsServ implements AssetService {
     department_id: string,
     assetsDetails: createAssetDTO,
   ): Promise<Asset> {
-    try {
-      if (!department_id || !assetsDetails)
-        throw new Error("Department id and asset details must be provided");
+    if (!department_id || !assetsDetails)
+      throw new Error("Department id and asset details must be provided");
 
-      const allowedFields: (keyof createAssetDTO)[] = [
-        "description",
-        "image",
-        "name",
-        "quantity",
-      ];
+    const allowedFields: (keyof createAssetDTO)[] = [
+      "description",
+      "name",
+      "quantity",
+    ];
 
-      let filteredKeyValues: Record<string, any> = {};
+    let filteredKeyValues: Record<string, any> = {};
 
-      for (const key of allowedFields) {
-        const value = assetsDetails[key as keyof createAssetDTO];
+    for (const key of allowedFields) {
+      const value = assetsDetails[key as keyof createAssetDTO];
 
-        if (value == undefined || value == null)
-          throw new Error(`${key} has an invalid value`);
+      if (
+        value == undefined ||
+        value == null ||
+        (typeof value === "string" && value.trim() === "")
+      )
+        throw new Error(`${key} has an invalid value`);
 
-        filteredKeyValues[key] = value;
-      }
-
-      const newAsset = this.repo.createAsset(
-        department_id,
-        filteredKeyValues as createAssetDTO,
-      );
-
-      return newAsset;
-    } catch (error) {
-      throw error;
+      filteredKeyValues[key] = value;
     }
+
+    if (assetsDetails.image)
+      filteredKeyValues["image"] = assetsDetails["image"];
+
+    const newAsset = await this.repo.createAsset(
+      department_id,
+      filteredKeyValues as createAssetDTO,
+    );
+
+    return newAsset;
   }
 
   async editAsset(

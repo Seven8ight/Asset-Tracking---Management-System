@@ -6,7 +6,7 @@ import type {
   updateIndividualAssetDTO,
 } from "./individual_asset.types.js";
 
-export class AssetRepo implements AssetRepository {
+export class IndividualAssetRepo implements AssetRepository {
   constructor(private db: Database) {}
 
   async createIndividualAsset(
@@ -14,7 +14,7 @@ export class AssetRepo implements AssetRepository {
     assetsId: string,
   ): Promise<IndividualAsset> {
     try {
-      const sqlString: string = `INSERT INTO asset(department_id,asset_id) VALUES($1,$2) RETURNING *`,
+      const sqlString: string = `INSERT INTO individual_asset(department_id,asset_id) VALUES($1,$2) RETURNING *`,
         sqlQuery = await this.db.query(sqlString, [departmentId, assetsId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -42,7 +42,7 @@ export class AssetRepo implements AssetRepository {
         values.push(newAssetDetails[key as keyof updateIndividualAssetDTO]);
       }
 
-      const sqlString: string = `UPDATE asset ${keys.join(",")} WHERE asset_id=$1 RETURNING *`,
+      const sqlString: string = `UPDATE individual_asset SET ${keys.join(",")} WHERE id=$1 RETURNING *`,
         sqlQuery = await this.db.query(sqlString, [assetId, ...values]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -58,7 +58,8 @@ export class AssetRepo implements AssetRepository {
 
   async getIndividualAssets(assetsId: string): Promise<IndividualAsset[]> {
     try {
-      const sqlString: string = "SELECT * FROM asset WHERE asset_id=$1",
+      const sqlString: string =
+          "SELECT * FROM individual_asset WHERE asset_id=$1",
         sqlQuery = await this.db.query(sqlString, [assetsId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -74,7 +75,7 @@ export class AssetRepo implements AssetRepository {
 
   async deleteIndividualAssets(assetId: string): Promise<void> {
     try {
-      const sqlString = "DELETE FROM asset WHERE asset_id=$1",
+      const sqlString = "DELETE FROM individual_asset WHERE asset_id=$1",
         sqlQuery = await this.db.query(sqlString, [assetId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");

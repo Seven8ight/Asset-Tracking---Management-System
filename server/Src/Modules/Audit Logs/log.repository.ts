@@ -12,11 +12,11 @@ export class LogRepo implements LogRepository {
   ): Promise<Log> {
     try {
       const sqlString: string =
-          "INSERT INTO audit_log(department_iduser_id,action_type,entity_id,entity_type,old_values,new_values) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
+          "INSERT INTO audit_logs(department_id,user_id,action,entity_id,entity_type,old_values,new_values) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *",
         sqlQuery = await this.db.query(sqlString, [
           department_id,
           user_id,
-          newDetails.action_type,
+          newDetails.action,
           newDetails.entity_id,
           newDetails.entity_type,
           JSON.stringify(newDetails.old_values),
@@ -36,7 +36,7 @@ export class LogRepo implements LogRepository {
 
   async getLog(logId: string): Promise<Log> {
     try {
-      const sqlString: string = "SELECT * FROM audit_log WHERE id=$1",
+      const sqlString: string = "SELECT * FROM audit_logs WHERE id=$1",
         sqlQuery = await this.db.query(sqlString, [logId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -53,7 +53,7 @@ export class LogRepo implements LogRepository {
   async getDepartmentLogs(department_id: string): Promise<Log[]> {
     try {
       const sqlString: string =
-          "SELECT * FROM audit_log WHERE department_id=$1",
+          "SELECT * FROM audit_logs WHERE department_id=$1",
         sqlQuery = await this.db.query(sqlString, [department_id]);
 
       if (!sqlQuery) throw new Error("SQL Query error");

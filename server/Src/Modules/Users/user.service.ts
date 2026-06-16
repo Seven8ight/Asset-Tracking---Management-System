@@ -15,15 +15,12 @@ export class UserServ implements UserService {
   }
 
   async editUser(
-    department_id: string,
     user_id: string,
     user_details: createUserDTO,
   ): Promise<PublicUser> {
     try {
-      if (!department_id || !user_id || !user_details)
-        throw new Error(
-          "Tenant id, user id and new user details must be provided",
-        );
+      if (!user_id || !user_details)
+        throw new Error("User id and new user details must be provided");
 
       const allowedFields: string[] = [
         "department_id",
@@ -44,7 +41,6 @@ export class UserServ implements UserService {
       }
 
       const patchedUser = await this.repo.editUser(
-        department_id,
         user_id,
         filteredUserDetails as createUserDTO,
       );
@@ -55,12 +51,11 @@ export class UserServ implements UserService {
     }
   }
 
-  async getUser(department_id: string, user_id: string): Promise<PublicUser> {
+  async getUser(user_id: string): Promise<PublicUser> {
     try {
-      if (!department_id || !user_id)
-        throw new Error("Department id, user id and userdetails ");
+      if (user_id) throw new Error("User id and userdetails ");
 
-      const user = await this.repo.getUser(department_id, user_id);
+      const user = await this.repo.getUser(user_id);
 
       return this.createPublicUser(user);
     } catch (error) {

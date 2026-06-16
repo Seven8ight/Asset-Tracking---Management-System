@@ -17,10 +17,7 @@ export const UserController = async (
       case "GET": {
         const userGetDetails = AuthValidator(request);
 
-        const user = service.getUser(
-          userGetDetails.departmentId,
-          userGetDetails.userId,
-        );
+        const user = service.getUser(userGetDetails.userId);
         sendResponseMessage(200, false, user, response);
 
         break;
@@ -30,7 +27,6 @@ export const UserController = async (
 
         const patchUserDetails: any = await getRequestBody(request),
           patchedUser = await service.editUser(
-            userPatchDetails.departmentId,
             userPatchDetails.userId,
             patchUserDetails,
           );

@@ -1,5 +1,5 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
-import { assetAssignmentsServ } from "../../../Data Objects/DTO.js";
+import { assetAssignmentsServ, logsServ } from "../../../Data Objects/DTO.js";
 import {
   getRequestBody,
   PathnameValidator,
@@ -7,7 +7,7 @@ import {
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
 
-export const Assignments = async (
+export const AssignmentsController = async (
   request: IncomingMessage,
   response: ServerResponse<IncomingMessage>,
 ) => {
@@ -40,16 +40,35 @@ export const Assignments = async (
           user.departmentId,
           user.userId,
         );
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: postAssetId,
+          entity_type: "Asset assignment entity",
+          action: "Asset assignment to user",
+          old_values: {},
+          new_values: responseBody,
+        });
+
         sendResponseMessage(201, false, responseBody, response);
         break;
       case "PATCH":
         const patchAssignmentId = PathnameValidator(pathnames),
           patchReqBody: any = await getRequestBody(request);
 
-        const patchResponseBody = await service.editAssignment(
-          patchAssignmentId,
-          patchReqBody,
-        );
+        const priorResponseBody =
+            await service.getAssignments(patchAssignmentId),
+          patchResponseBody = await service.editAssignment(
+            patchAssignmentId,
+            patchReqBody,
+          );
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: patchAssignmentId,
+          entity_type: "Asset assignment entity",
+          action: "Change of assignment to user",
+          old_values: priorResponseBody,
+          new_values: patchResponseBody,
+        });
 
         sendResponseMessage(200, false, patchResponseBody, response);
         break;

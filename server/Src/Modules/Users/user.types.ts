@@ -25,20 +25,12 @@ export type updateUserDTO =
 export type PublicUser = Omit<User, "password">;
 
 export interface UserRepository {
-  editUser: (
-    department_id: string,
-    userId: string,
-    newDetails: updateUserDTO,
-  ) => Promise<User>;
-  getUser: (department_id: string, userId: string) => Promise<User>;
+  editUser: (userId: string, newDetails: updateUserDTO) => Promise<User>;
+  getUser: (userId: string) => Promise<User>;
   deleteUser: (department_id: string, userId: string) => Promise<void>;
 }
 export interface UserService {
-  editUser: (
-    department_id: string,
-    userId: string,
-    userDetails: createUserDTO,
-  ) => Promise<PublicUser>;
-  getUser: (department_id: string, userId: string) => Promise<PublicUser>;
+  editUser: (userId: string, userDetails: createUserDTO) => Promise<PublicUser>;
+  getUser: (userId: string) => Promise<PublicUser>;
   deleteUser: (department_id: string, userId: string) => Promise<void>;
 }

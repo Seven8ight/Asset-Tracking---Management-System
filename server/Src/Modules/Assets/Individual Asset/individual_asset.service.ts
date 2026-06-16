@@ -5,7 +5,7 @@ import type {
   updateIndividualAssetDTO,
 } from "./individual_asset.types.js";
 
-export class AssetServ implements AssetService {
+export class IndividualAssetServ implements AssetService {
   constructor(private repo: AssetRepository) {}
 
   async createIndividualAsset(
@@ -55,7 +55,7 @@ export class AssetServ implements AssetService {
           `No fields provided for updating the asset, ${assetId}`,
         );
 
-      const patchedAsset = await this.editIndividualAsset(
+      const patchedAsset = await this.repo.editIndividualAsset(
         assetId,
         filteredAssetDetails,
       );

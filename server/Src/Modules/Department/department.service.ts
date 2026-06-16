@@ -1,3 +1,4 @@
+import { logsServ } from "../../Data Objects/DTO.js";
 import type {
   createDepartmentDTO,
   Department,
