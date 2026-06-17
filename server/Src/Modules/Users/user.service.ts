@@ -53,7 +53,7 @@ export class UserServ implements UserService {
 
   async getUser(user_id: string): Promise<PublicUser> {
     try {
-      if (user_id) throw new Error("User id and userdetails ");
+      if (!user_id) throw new Error("User id must be provided");
 
       const user = await this.repo.getUser(user_id);
 

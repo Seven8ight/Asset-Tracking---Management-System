@@ -25,6 +25,8 @@ export const DepartmentController = async (
         let requestBody: any;
 
         if (pathname == "all") requestBody = await service.getAllDepartments();
+        else if (pathname == "allusers")
+          requestBody = await service.getUsersInDepartments(user.departmentId);
         else requestBody = await service.getDepartment(pathname);
 
         sendResponseMessage(200, false, requestBody, response);

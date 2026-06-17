@@ -26,6 +26,8 @@ export const AssetController = async (
 
         if (getPathname == "department")
           requestBody = await service.getDepartmentAssets(user.departmentId);
+        else if (getPathname == "all")
+          requestBody = await service.getAllAssets();
         else requestBody = await service.getAsset(getPathname);
 
         sendResponseMessage(200, false, requestBody, response);
@@ -39,8 +41,8 @@ export const AssetController = async (
 
         await logsServ.createLog(user.departmentId, user.userId, {
           entity_id: assetsCreation.id,
-          entity_type: "Asset item",
-          action: "Creating an asset",
+          entity_type: "Asset",
+          action: "Asset creation",
           old_values: {},
           new_values: assetsCreation,
         });
@@ -55,8 +57,8 @@ export const AssetController = async (
 
         await logsServ.createLog(user.departmentId, user.userId, {
           entity_id: assetsId,
-          entity_type: "Asset item",
-          action: "Editing an asset",
+          entity_type: "Asset",
+          action: "Asset update",
           old_values: beforeUpdateAsset,
           new_values: assetsPatch,
         });
@@ -71,8 +73,8 @@ export const AssetController = async (
 
         await logsServ.createLog(user.departmentId, user.userId, {
           entity_id: deleteAssetId,
-          entity_type: "Asset item",
-          action: "Deleting an asset",
+          entity_type: "Asset",
+          action: "Asset deletion",
           old_values: beforeDeleteAsset,
           new_values: {},
         });

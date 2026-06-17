@@ -4,18 +4,20 @@ import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../Utilities/HttpFunctions.js";
-import { authService, logsServ, userServ } from "../../Data Objects/DTO.js";
+import {
+  authService,
+  DepartmentService,
+  logsServ,
+  userServ,
+} from "../../Data Objects/DTO.js";
 import { REDIRECT_URL } from "../../Config/Env.js";
-import { sendMemberInvitation } from "../../Utilities/MailSender.js";
+import {
+  sendMemberInvitation,
+  sendPasswordReset,
+} from "../../Utilities/MailSender.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
 import { decode_access_token } from "../../Utilities/Jwt.js";
-import type { PublicUser } from "../Users/user.types.js";
-
-// {
-//   "username":"lorenzo",
-//   "email":"llwmuchiri@gmail.com",
-//   "password":"Davidwan1*"
-// }
+import type { PublicUser, User } from "../Users/user.types.js";
 
 export const AuthenticationController = async (
   request: IncomingMessage,
@@ -29,13 +31,27 @@ export const AuthenticationController = async (
   try {
     const requestPath = PathnameValidator(pathnames);
 
-    if (request.method != "POST")
-      return sendResponseMessage(
-        405,
-        true,
-        "Invalid HTTP Header method",
-        response,
-      );
+    if (
+      requestPath == "register" ||
+      requestPath == "login" ||
+      requestPath == "refresh"
+    ) {
+      if (request.method != "POST")
+        return sendResponseMessage(
+          405,
+          true,
+          "Invalid HTTP Header method",
+          response,
+        );
+    } else {
+      if (request.method != "GET")
+        return sendResponseMessage(
+          405,
+          true,
+          "Invalid HTTP header method",
+          response,
+        );
+    }
 
     switch (requestPath) {
       case "register":
@@ -58,10 +74,16 @@ export const AuthenticationController = async (
 
         sendResponseMessage(201, false, newAccessToken, response);
         break;
-      case "invite":
-        const user = AuthValidator(request);
+      case "me":
+        const meuser = AuthValidator(request),
+          publicUser = await userServ.getUser(meuser.userId);
 
-        if (user.departmentId == null || !user.departmentId)
+        sendResponseMessage(200, false, publicUser, response);
+        break;
+      case "invite":
+        const inviter = AuthValidator(request);
+
+        if (inviter.departmentId == null || !inviter.departmentId)
           return sendResponseMessage(
             400,
             true,
@@ -73,22 +95,47 @@ export const AuthenticationController = async (
           invitedUser = await authService.register(userPostDetails),
           decodedUser = decode_access_token(
             invitedUser.accessToken,
-          ) as PublicUser;
+          ) as PublicUser,
+          department = await DepartmentService.getDepartment(
+            inviter.departmentId,
+          );
 
         await sendMemberInvitation(
-          userPostDetails,
+          decodedUser as User,
+          department.manager_name,
+          department.name,
           `${REDIRECT_URL}/invite?token=${invitedUser.refreshToken}`,
         );
 
-        await logsServ.createLog(user.departmentId, user.userId, {
+        await logsServ.createLog(inviter.departmentId, inviter.userId, {
           entity_id: decodedUser.id,
-          entity_type: "User invititation",
-          action: `User invite to department, ${user.departmentId}`,
+          entity_type: "User",
+          action: `User Invitation`,
           old_values: {},
           new_values: {},
         });
 
         sendResponseMessage(200, false, invitedUser, response);
+        break;
+      case "passwordreset":
+        const userRequesting = AuthValidator(request),
+          findUser = await userServ.getUser(userRequesting.userId);
+
+        await sendPasswordReset(findUser, `${REDIRECT_URL}/forgot-password`);
+
+        await logsServ.createLog(
+          userRequesting.departmentId,
+          userRequesting.userId,
+          {
+            entity_id: userRequesting.userId,
+            entity_type: "User",
+            action: `Password reset`,
+            old_values: {},
+            new_values: {},
+          },
+        );
+
+        sendResponseMessage(200, false, "Password reset email sent", response);
         break;
       default:
         sendResponseMessage(404, true, "Invalid api route", response);

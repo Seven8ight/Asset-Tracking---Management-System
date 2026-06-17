@@ -3,7 +3,9 @@ import type { Database } from "../../Config/Db.js";
 import type {
   createDepartmentDTO,
   Department,
+  departmentmember,
   DepartmentRepository,
+  FullDepartmentDetails,
   updateDepartmentDTO,
 } from "./department.types.js";
 import type { User } from "../Users/user.types.js";
@@ -61,14 +63,14 @@ export class DepartmentRepo implements DepartmentRepository {
     }
   }
 
-  async getDepartment(departmentId: string): Promise<Department> {
+  async getDepartment(departmentId: string): Promise<FullDepartmentDetails> {
     try {
-      const sqlString: string = `SELECT * FROM departments WHERE id=$1`,
+      const sqlString: string = `SELECT d.*,u.name as manager_name FROM departments d JOIN users u ON department.manager_id=u.id WHERE d.id=$1`,
         sqlQuery = await this.db.query(sqlString, [departmentId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const departmentQuery = sqlQuery as QueryResult<Department>,
+      const departmentQuery = sqlQuery as QueryResult<FullDepartmentDetails>,
         department = departmentQuery.rows[0];
 
       return department!;
@@ -77,14 +79,14 @@ export class DepartmentRepo implements DepartmentRepository {
     }
   }
 
-  async getAllDepartments(): Promise<Department[]> {
+  async getAllDepartments(): Promise<FullDepartmentDetails[]> {
     try {
-      const sqlString: string = `SELECT * FROM departments`,
+      const sqlString: string = `SELECT d.*,u.name as manager_name FROM departments d JOIN users u ON department.manager_id=u.id`,
         sqlQuery = await this.db.query(sqlString);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const departmentsQuery = sqlQuery as QueryResult<Department>,
+      const departmentsQuery = sqlQuery as QueryResult<FullDepartmentDetails>,
         departments = departmentsQuery.rows;
 
       return departments;
@@ -93,15 +95,17 @@ export class DepartmentRepo implements DepartmentRepository {
     }
   }
 
-  async getUsersInDepartments(departmentId: string) {
+  async getUsersInDepartments(
+    departmentId: string,
+  ): Promise<departmentmember[]> {
     try {
-      const sqlString: string = `SELECT * FROM users WHERE department_id=$1`,
+      const sqlString: string = `SELECT name,email FROM users WHERE department_id=$1`,
         sqlQuery = await this.db.query(sqlString, [departmentId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const usersInDepartmentQuery = sqlQuery as QueryResult<User>,
-        usersInDepartment = usersInDepartmentQuery.rows[0];
+      const usersInDepartmentQuery = sqlQuery as QueryResult<departmentmember>,
+        usersInDepartment = usersInDepartmentQuery.rows;
 
       return usersInDepartment;
     } catch (error) {

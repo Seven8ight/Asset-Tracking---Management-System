@@ -1,9 +1,10 @@
-import { logsServ } from "../../Data Objects/DTO.js";
 import type {
   createDepartmentDTO,
   Department,
+  departmentmember,
   DepartmentRepository,
   DepartmentService,
+  FullDepartmentDetails,
   updateDepartmentDTO,
 } from "./department.types.js";
 
@@ -80,7 +81,7 @@ export class DepartmentServ implements DepartmentService {
     }
   }
 
-  async getDepartment(departmentId: string): Promise<Department> {
+  async getDepartment(departmentId: string): Promise<FullDepartmentDetails> {
     try {
       if (!departmentId) throw new Error("Department id must be provided");
 
@@ -92,7 +93,20 @@ export class DepartmentServ implements DepartmentService {
     }
   }
 
-  async getAllDepartments(): Promise<Department[]> {
+  async getUsersInDepartments(
+    departmentId: string,
+  ): Promise<departmentmember[]> {
+    try {
+      if (!departmentId) throw new Error("Department id must be provided");
+
+      const departmentMembers = await this.getUsersInDepartments(departmentId);
+      return departmentMembers;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAllDepartments(): Promise<FullDepartmentDetails[]> {
     try {
       const departments = await this.repo.getAllDepartments();
 

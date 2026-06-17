@@ -97,6 +97,16 @@ export class AssetsServ implements AssetService {
     }
   }
 
+  async getAllAssets(): Promise<Asset[]> {
+    try {
+      const allAssets = await this.repo.getAllAssets();
+
+      return allAssets;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getDepartmentAssets(department_id: string): Promise<Asset[]> {
     try {
       if (!department_id) throw new Error("Department id must be provided");

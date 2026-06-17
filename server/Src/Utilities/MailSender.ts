@@ -1,39 +1,46 @@
 import { Resend } from "resend";
 import { RESEND_KEY } from "../Config/Env.js";
-import type { User } from "../Modules/Users/user.types.js";
+import type { PublicUser, User } from "../Modules/Users/user.types.js";
 
 const resend = new Resend(RESEND_KEY);
 
 export const sendPasswordReset = async (
-    emailTo: string,
+    user: User | PublicUser,
     redirectLink: string,
   ) => {
     try {
       await resend.emails.send({
         from: "No-reply <noreply@ferracorp.com>",
-        to: emailTo,
+        to: user.email,
         template: {
-          id: "e1506c3c-18fb-465f-a938-c28ce150c405",
-          variables: {},
+          id: "013e03e7-f355-4c37-84c9-bbd7581029b1",
+          variables: {
+            redirectlink: redirectLink,
+            user: user.name,
+          },
         },
       });
     } catch (error) {
       throw error;
     }
   },
-  sendMemberInvitation = async (user: User, redirectLink: string) => {
+  sendMemberInvitation = async (
+    user: User,
+    managername: string,
+    departmentName: string,
+    redirectLink: string,
+  ) => {
     try {
       await resend.emails.send({
         from: "No-reply <noreply@ferracorp.com>",
         to: user.email,
         template: {
-          id: "c2628e1f-5f8d-45c6-9974-9399d103ea71",
+          id: "3e2f8772-461b-4103-90a5-8fd5cc12faac",
           variables: {
-            userEmail: user.email,
-            workspaceName: "Assio",
-            acceptInvitationLink: redirectLink,
-            inviterName: "Paul Kiragu",
-            redirectLink: redirectLink,
+            departmentmanager: managername,
+            departmentname: departmentName,
+            redirectlink: redirectLink,
+            user: user.name,
           },
         },
       });

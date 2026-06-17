@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { individualAssetServ } from "../../../Data Objects/DTO.js";
+import { individualAssetServ, logsServ } from "../../../Data Objects/DTO.js";
 import {
   getRequestBody,
   PathnameValidator,
@@ -26,15 +26,6 @@ export const IndividualAssetController = async (
 
         sendResponseMessage(200, false, requestBody, response);
         break;
-      case "POST":
-        const postAssetsId: string = PathnameValidator(pathnames),
-          createAsset = await service.createIndividualAsset(
-            user.departmentId,
-            postAssetsId,
-          );
-
-        sendResponseMessage(201, false, createAsset, response);
-        break;
       case "PATCH":
         const patchAssetId = PathnameValidator(pathnames),
           patchRequestBody: any = await getRequestBody(request),
@@ -43,12 +34,27 @@ export const IndividualAssetController = async (
             patchRequestBody,
           );
 
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: patchAssetId,
+          entity_type: "Individual Asset",
+          action: "Individual asset update",
+          old_values: {},
+          new_values: {},
+        });
+
         sendResponseMessage(200, false, patchAsset, response);
         break;
       case "DELETE":
         const deleteAssetId = PathnameValidator(pathnames);
-
         await service.deleteIndividualAssets(deleteAssetId);
+
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: deleteAssetId,
+          entity_type: "Individual Asset",
+          action: "Individual asset deletion",
+          old_values: {},
+          new_values: {},
+        });
 
         sendResponseMessage(
           204,

@@ -76,6 +76,22 @@ export class AssetRepo implements AssetRepository {
     }
   }
 
+  async getAllAssets(): Promise<Asset[]> {
+    try {
+      const sqlString: string = "SELECT * FROM asset",
+        sqlQuery = await this.db.query(sqlString, []);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
+
+      const allAssetsQuery = sqlQuery as QueryResult<Asset>,
+        allAssets = allAssetsQuery.rows;
+
+      return allAssets;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getAsset(assetsId: string): Promise<Asset> {
     try {
       const sqlString: string = "SELECT * FROM asset WHERE id=$1",
