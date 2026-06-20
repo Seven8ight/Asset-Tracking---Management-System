@@ -20,5 +20,5 @@ CREATE TABLE individual_asset(
     asset_id UUID REFERENCES asset(id) ON DELETE CASCADE NOT NULL,
     assigned asset_status NOT NULL DEFAULT 'open',
     is_repaired BOOLEAN NOT NULL DEFAULT FALSE,
-    is_broken BOOLEAN NOT NULL DEFAULT FALSE 
+    is_broken BOOLEAN NOT NULL DEFAULT FALSE
 );

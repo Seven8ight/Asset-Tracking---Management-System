@@ -91,11 +91,11 @@ export class IndividualAssetRepo implements AssetRepository {
 
   async deleteIndividualAsset(assetId: string) {
     try {
-      const sqlString = `DELETE FROM individual_assets
+      const sqlString = `DELETE FROM individual_asset
           WHERE id = (
               SELECT id 
-              FROM individual_assets
-              WHERE is_broken IS NOT 'TRUE' OR is_repaired IS NOT 'TRUE'
+              FROM individual_asset
+              WHERE is_broken IS NOT TRUE OR is_repaired IS NOT TRUE
               ORDER BY RANDOM()         
               LIMIT 1                   
           ) and asset_id=$1;`,
@@ -103,6 +103,7 @@ export class IndividualAssetRepo implements AssetRepository {
 
       if (!sqlQuery) throw new Error("SQL Query error");
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }

@@ -5,7 +5,6 @@ import type {
   AssetAssignmentsRepository,
   updateAssignmentDTO,
 } from "./asset_assignment.types.js";
-import type { updateAssetDTO } from "../Definition/asset.types.js";
 
 export class AssetAssignmentRepo implements AssetAssignmentsRepository {
   constructor(private db: Database) {}

@@ -31,7 +31,7 @@ export class AssetRepo implements AssetRepository {
       const insertion = sqlQuery as QueryResult<Asset>,
         newAsset = insertion.rows[0];
 
-      for (let i = 0; i <= assetDetails.quantity; i++)
+      for (let i = 0; i < assetDetails.quantity; i++)
         await individualAssetServ.createIndividualAsset(
           department_id,
           newAsset!.id,
@@ -62,7 +62,7 @@ export class AssetRepo implements AssetRepository {
       keys.push(`last_updated=$${paramIndex++}`);
       values.push(date.toUTCString());
 
-      const sqlString: string = `UPDATE asset SET ${keys.join(",")} WHERE id=$1 RETURING *`,
+      const sqlString: string = `UPDATE asset SET ${keys.join(",")} WHERE id=$1 RETURNING *`,
         sqlQuery = await this.db.query(sqlString, [assetsId, ...values]);
 
       if (!sqlQuery) throw new Error("SQL Query error");

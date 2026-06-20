@@ -70,8 +70,7 @@ export class AssetsServ implements AssetService {
       for (const key of allowedFields) {
         const value = newAssetDetails[key as keyof createAssetDTO];
 
-        if (value == undefined || value == null)
-          throw new Error(`${key} has an invalid value`);
+        if (value == undefined || value == null) continue;
 
         filteredKeyValues[key] = value;
       }
@@ -89,13 +88,15 @@ export class AssetsServ implements AssetService {
           const difference =
             retrieveIndividualAssets.length - patchAsset.quantity;
 
-          if (difference < 0)
-            await individualAssetServ.deleteIndividualAsset(assetsId);
-          else if (difference > 0)
-            await individualAssetServ.createIndividualAsset(
-              patchAsset.department_id,
-              assetsId,
-            );
+          if (difference < 0) {
+            for (let i = 0; i < Math.abs(difference); i++)
+              await individualAssetServ.createIndividualAsset(
+                patchAsset.department_id,
+                assetsId,
+              );
+          } else
+            for (let i = difference; i > 0; i--)
+              await individualAssetServ.deleteIndividualAsset(assetsId);
         }
       }
 

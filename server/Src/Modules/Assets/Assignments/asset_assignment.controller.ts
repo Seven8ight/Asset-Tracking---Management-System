@@ -49,7 +49,7 @@ export const AssignmentsController = async (
         await PermissionChecker(
           request,
           "asset assignment",
-          "Assign aset to self",
+          "Assign asset to self",
         );
         const postAssetId = PathnameValidator(pathnames);
 
@@ -70,6 +70,12 @@ export const AssignmentsController = async (
         sendResponseMessage(201, false, responseBody, response);
         break;
       case "PATCH":
+        await PermissionChecker(
+          request,
+          "asset assignment",
+          "Assign asset to self",
+        );
+
         const patchAssignmentId = PathnameValidator(pathnames),
           patchReqBody: any = await getRequestBody(request);
 

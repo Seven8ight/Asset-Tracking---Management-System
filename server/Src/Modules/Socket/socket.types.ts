@@ -9,7 +9,6 @@ export type AuthenticatedSocket = Socket & {
 
 export interface SocketIOService {
   establishConnection: () => void;
-  emitToUser: (userId: string, event: string, data: unknown) => void;
   emitToAdmins: (event: string, data: unknown) => void;
   broadcast: (event: string, data: unknown) => void;
 }

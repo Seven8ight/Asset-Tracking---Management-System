@@ -37,7 +37,7 @@ export type PermissionName =
   //Asset assignments
   | "View an assignment"
   | "View departmental assignments"
-  | "Assign aset to self"
+  | "Assign asset to self"
 
   // Audit
   | "View all logs"

@@ -3,7 +3,11 @@ import type { AuthenticatedSocket, SocketIOService } from "./socket.types.js";
 import { Socket, Server as SocketServer, type ExtendedError } from "socket.io";
 import type { PublicUser } from "../Users/user.types.js";
 import { decode_access_token } from "../../Utilities/Jwt.js";
-import { individualAssetServ, assetService, assetService } from "../../Data Objects/DTO.js";
+import {
+  assetService,
+  individualAssetServ,
+  userServ,
+} from "../../Data Objects/DTO.js";
 
 /*
     1. Ownership change to asset as per the department
@@ -43,27 +47,59 @@ export class SocketIO implements SocketIOService {
       const authenticatedSocket: AuthenticatedSocket = socket,
         { id, department_id } = authenticatedSocket.data.user;
 
-        const assetsServ = assetService
-
       socket.join(`Rooms:${department_id}`);
 
       socket.on(
         "ownership change",
         async (
           departmentId: string,
-          assetsId:string,
           event: {
-            asset_id: string;
+            individualAssetId: string;
             status: string;
           },
         ) => {
-            const asset = await individualAssetServ.getIndividualAssets(assetsId)
-            
-          this.ioServer
-            .to(`Rooms:${departmentId}`)
-            .emit("ownership change", {
-                asset_id:asset.
-            });
+          const individualAsset = await individualAssetServ.getIndividualAsset(
+              event.individualAssetId,
+            ),
+            actualAsset = await assetService.getAsset(individualAsset.asset_id),
+            assetOwner = await userServ.getUser(id);
+
+          let msg: string = "";
+          if (event.status == "taken")
+            msg = `${assetOwner} has taken a ${actualAsset.name}`;
+          else msg = `${assetOwner} has returned a ${actualAsset.name}`;
+
+          this.ioServer.to(`Rooms:${departmentId}`).emit("ownership change", {
+            message: msg,
+          });
+        },
+      );
+
+      socket.on(
+        "broken asset",
+        async (departmentId: string, individualAssetId: string) => {
+          const individualAsset =
+              await individualAssetServ.getIndividualAsset(individualAssetId),
+            actualAsset = await assetService.getAsset(individualAsset.asset_id),
+            reporter = await userServ.getUser(id);
+
+          this.ioServer.to(`Rooms:${departmentId}`).emit("ownership change", {
+            message: `${reporter.username} has reported a ${actualAsset.name} is broken`,
+          });
+        },
+      );
+
+      socket.on(
+        "repaired asset",
+        async (departmentId: string, individualAssetId: string) => {
+          const individualAsset =
+              await individualAssetServ.getIndividualAsset(individualAssetId),
+            actualAsset = await assetService.getAsset(individualAsset.asset_id),
+            reporter = await userServ.getUser(id);
+
+          this.ioServer.to(`Rooms:${departmentId}`).emit("ownership change", {
+            message: `${reporter.username} has declared ${actualAsset.name} to be fixed`,
+          });
         },
       );
     });
@@ -73,8 +109,10 @@ export class SocketIO implements SocketIOService {
     this.ioServer.listen(this.server);
   }
 
-  emitToAdmins(event: string, data: unknown): void {}
-  emitToUser(userId: string, event: string, data: unknown): void {}
+  emitToAdmins(event: string, data: unknown): void {
+    this.ioServer.to(`Room:admins`).emit(event, { data });
+  }
+
   broadcast(event: string, data: unknown): void {
     this.ioServer.emit(event, data);
   }
