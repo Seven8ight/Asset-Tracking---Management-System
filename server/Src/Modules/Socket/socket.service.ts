@@ -66,8 +66,9 @@ export class SocketIO implements SocketIOService {
 
           let msg: string = "";
           if (event.status == "taken")
-            msg = `${assetOwner} has taken a ${actualAsset.name}`;
-          else msg = `${assetOwner} has returned a ${actualAsset.name}`;
+            msg = `${assetOwner.username} has taken a ${actualAsset.name}`;
+          else
+            msg = `${assetOwner.username} has returned a ${actualAsset.name}`;
 
           this.ioServer.to(`Rooms:${departmentId}`).emit("ownership change", {
             message: msg,

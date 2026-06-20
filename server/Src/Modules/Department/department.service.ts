@@ -102,7 +102,8 @@ export class DepartmentServ implements DepartmentService {
     try {
       if (!departmentId) throw new Error("Department id must be provided");
 
-      const departmentMembers = await this.getUsersInDepartments(departmentId);
+      const departmentMembers =
+        await this.repo.getUsersInDepartments(departmentId);
       return departmentMembers;
     } catch (error) {
       throw error;

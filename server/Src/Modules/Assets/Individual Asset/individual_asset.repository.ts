@@ -103,7 +103,6 @@ export class IndividualAssetRepo implements AssetRepository {
 
       if (!sqlQuery) throw new Error("SQL Query error");
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }

@@ -137,7 +137,7 @@ const migrationTableCreation = async () => {
           description: "Capability to edit assets in the department",
         },
         {
-          name: "View depatrtment asset",
+          name: "View department asset",
           group_name: "assets",
           description: "Capability to view department asset in the department",
         },
@@ -197,6 +197,28 @@ const migrationTableCreation = async () => {
           group_name: "audit",
           description: "Capability to view an audit log",
         },
+
+        // Permissions
+        {
+          name: "View permissions",
+          group_name: "permissions",
+          description: "Capability to view all permissions in the system",
+        },
+        {
+          name: "Create a permission",
+          group_name: "permissions",
+          description: "Capability to create a permission",
+        },
+        {
+          name: "Edit a permission",
+          group_name: "permissions",
+          description: "Capability to edit a permission",
+        },
+        {
+          name: "Delete a permission",
+          group_name: "permissions",
+          description: "Capability to delete a permission",
+        },
       ];
 
     for (let i = 0; i < values.length; i++) {
@@ -244,7 +266,7 @@ const migrationTableCreation = async () => {
     const roles = await rolesService.getRoles(),
       permissions = await permissionServ.getAllPermission();
 
-    const adminRole = roles.find((r) => r.name === "SaaS admin")!,
+    const adminRole = roles.find((r) => r.name === "SaaS Admin")!,
       departmentManagerRole = roles.find(
         (r) => r.name === "Department Manager",
       )!,
@@ -252,7 +274,7 @@ const migrationTableCreation = async () => {
       maintenanceEngineerRole = roles.find(
         (r) => r.name === "Maintenance Engineer",
       )!,
-      supportStaffRole = roles.find((r) => r.name === "Support staff")!;
+      supportStaffRole = roles.find((r) => r.name === "Support Staff")!;
 
     for (const permission of permissions) {
       const pName = permission.name,
@@ -264,7 +286,12 @@ const migrationTableCreation = async () => {
 
       // --- Department Manager ---
       // Can do everything EXCEPT view "all logs" (they can only view departmental logs/individual logs)
-      if (pName !== "View all logs") {
+      if (
+        pName !== "View all logs" &&
+        pName !== "Create a permission" &&
+        pName !== "Edit a permission" &&
+        pName !== "Delete a permission"
+      ) {
         await rolePermissionServ.createRPermission(
           departmentManagerRole.id,
           permission.id,
@@ -291,7 +318,7 @@ const migrationTableCreation = async () => {
 
       // --- Support Staff ---
       // Strict requirement: Only allowed to assign asset to self
-      if (pName === "Assign aset to self") {
+      if (pName === "Assign asset to self") {
         // Note: Kept your original typo "aset" to match type
         await rolePermissionServ.createRPermission(
           supportStaffRole.id,

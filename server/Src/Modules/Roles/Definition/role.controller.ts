@@ -103,6 +103,8 @@ export const RoleController = async (
         sendResponseMessage(200, false, updateRole, response);
         break;
       case "DELETE":
+        await PermissionChecker(request, "users", "Manage user roles");
+
         const deleteRoleId: string = PathnameValidator(pathNames),
           beforeDeletionRole = await service.getRole(deleteRoleId);
 

@@ -8,7 +8,8 @@ export type PermissionGroup =
   | "assets"
   | "individual asset"
   | "audit"
-  | "asset assignment";
+  | "asset assignment"
+  | "permissions";
 
 export type PermissionName =
   // Department
@@ -42,31 +43,41 @@ export type PermissionName =
   // Audit
   | "View all logs"
   | "View departmental logs"
-  | "View log";
+  | "View log"
+
+  //Permissions
+  | "View permissions"
+  | "Create a permission"
+  | "Edit a permission"
+  | "Delete a permission";
 
 export const PermissionChecker = async (
   request: IncomingMessage,
   permissionGroup: PermissionGroup,
   permissionName: PermissionName,
 ): Promise<void> => {
-  const user = AuthValidator(request);
+  try {
+    const user = AuthValidator(request);
 
-  const userRoles = await userRolesServ.getUserRolesWithPermissions(
-    user.userId,
-  );
+    const userRoles = await userRolesServ.getUserRolesWithPermissions(
+      user.userId,
+    );
 
-  const hasPermission = userRoles.roles.some((role) =>
-    role.permissions.some(
-      (permission) =>
-        permission.group_name === permissionGroup &&
-        permission.name === permissionName,
-    ),
-  );
+    const hasPermission = userRoles.roles.some((role) =>
+      role.permissions.some(
+        (permission) =>
+          permission.group_name === permissionGroup &&
+          permission.name === permissionName,
+      ),
+    );
 
-  if (!hasPermission) {
-    const error = new Error("Forbidden: user does not have permission");
+    if (!hasPermission) {
+      const error = new Error("Forbidden: user does not have permission");
+      throw error;
+    }
+
+    return;
+  } catch (error) {
     throw error;
   }
-
-  return;
 };

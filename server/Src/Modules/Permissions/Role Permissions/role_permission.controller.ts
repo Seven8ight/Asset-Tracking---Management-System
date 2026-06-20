@@ -37,11 +37,20 @@ export const RolePermissionController = async (
         sendResponseMessage(201, false, createRequest, response);
         break;
       case "DELETE":
-        const permissionId: string = PathnameValidator(pathnames);
+        const deleterRoleId = PathnameValidator(pathnames),
+          permissionId: string | undefined = pathnames[3];
 
-        await service.deleteRolePermissions(userDetails.userId, permissionId);
+        if (!permissionId)
+          throw new Error("Permission id must be provided in url segment");
 
-        sendResponseMessage(204, false, "Deleted successfully", response);
+        await service.deleteRolePermissions(deleterRoleId, permissionId);
+
+        sendResponseMessage(
+          204,
+          false,
+          "Role permission Deleted successfully",
+          response,
+        );
         break;
       default:
         sendResponseMessage(405, false, "Invalid HTTP header method", response);

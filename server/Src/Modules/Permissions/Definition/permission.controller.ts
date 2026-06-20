@@ -1,4 +1,4 @@
-import { get, type IncomingMessage, type ServerResponse } from "http";
+import { type IncomingMessage, type ServerResponse } from "http";
 import type { Permission } from "./permission.types.js";
 import {
   getRequestBody,
@@ -6,6 +6,7 @@ import {
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
 import { permissionServ } from "../../../Data Objects/DTO.js";
+import { PermissionChecker } from "../../../Middleware/PermissionChecker.js";
 
 export const PermissionController = async (
   request: IncomingMessage,
@@ -19,6 +20,8 @@ export const PermissionController = async (
   try {
     switch (request.method) {
       case "GET":
+        await PermissionChecker(request, "permissions", "View permissions");
+
         const getPathname = PathnameValidator(pathNames);
         let responseBody: any;
 
@@ -30,6 +33,7 @@ export const PermissionController = async (
 
         break;
       case "POST":
+        await PermissionChecker(request, "permissions", "Create a permission");
         const postReqBody: any = await getRequestBody(request);
 
         const permissionCreation: Permission =
@@ -39,6 +43,7 @@ export const PermissionController = async (
 
         break;
       case "PATCH":
+        await PermissionChecker(request, "permissions", "Edit a permission");
         const patchPermissionId: string = PathnameValidator(pathNames),
           patchReqBody: any = await getRequestBody(request);
 
@@ -51,6 +56,8 @@ export const PermissionController = async (
 
         break;
       case "DELETE":
+        await PermissionChecker(request, "permissions", "Delete a permission");
+
         const permissionId = PathnameValidator(pathNames);
 
         await service.deletePermission(permissionId);
