@@ -17,7 +17,7 @@ export class PermissionService implements PermissionServ {
       if (!permissionDetails)
         throw new Error("Permission details not provided");
 
-      const allowedFields: string[] = ["name", "description"];
+      const allowedFields: string[] = ["name", "description", "group_name"];
       let filteredPermissionDetails: Record<string, any> = {};
 
       for (let [key, value] of Object.entries(permissionDetails)) {
@@ -42,13 +42,14 @@ export class PermissionService implements PermissionServ {
   }
 
   async editPermission(
+    permissionId: string,
     permissionDetails: updatePermissionDTO,
   ): Promise<Permission> {
     try {
-      if (!permissionDetails)
-        throw new Error("Permission details not provided");
+      if (!permissionId || !permissionDetails)
+        throw new Error("Permission id and permission details not provided");
 
-      const allowedFields: string[] = ["name", "description"];
+      const allowedFields: string[] = ["group_name", "name", "description"];
       let filteredPermissionDetails: Record<string, any> = {};
 
       for (let [key, value] of Object.entries(permissionDetails)) {
@@ -62,6 +63,7 @@ export class PermissionService implements PermissionServ {
 
       const permissionCreation: Permission =
         await this.permissionRepo.editPermission(
+          permissionId,
           filteredPermissionDetails as updatePermissionDTO,
         );
 
@@ -97,6 +99,7 @@ export class PermissionService implements PermissionServ {
       throw error;
     }
   }
+
   async deletePermission(permissionId: string): Promise<void> {
     try {
       await this.permissionRepo.deletePermission(permissionId);

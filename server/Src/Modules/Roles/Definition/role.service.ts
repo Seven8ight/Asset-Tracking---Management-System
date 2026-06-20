@@ -1,4 +1,5 @@
 import { Warning } from "../../../Utilities/Logger.js";
+import type { createAssetDTO } from "../../Assets/Definition/asset.types.js";
 import type {
   createRoleDTO,
   Role,
@@ -13,13 +14,20 @@ export class Roleservice implements RoleService {
 
   async createRole(
     details: createRoleDTO,
-    departmentId: string,
+    departmentId?: string,
   ): Promise<Role> {
     try {
       if (details.name.length <= 0 || details.description.length <= 0)
         throw new Error("Name and description length invalid");
 
-      if (!departmentId) throw new Error("Department id must be provided");
+      const allowedFields: (keyof createRoleDTO)[] = ["name", "description"];
+
+      for (let key of allowedFields) {
+        const value = details[key];
+
+        if (value == null || value == undefined)
+          throw new Error(`${key} has an invalid value`);
+      }
 
       const createRole = await this.roleRepo.createRole(details, departmentId);
 
@@ -35,13 +43,15 @@ export class Roleservice implements RoleService {
       if (!roleId) throw new Error("Role id not provided");
 
       let validDetails: Record<string, any> = {},
-        allowedFields: string[] = ["name", "description"];
+        allowedFields: (keyof updateRoleDTO)[] = ["name", "description"];
 
-      for (let [key, value] of Object.entries(newDetails)) {
-        if (key.toLowerCase().length > 0 && allowedFields.includes(key)) {
-          if (value.length > 0) validDetails[key] = value;
-          else throw new Error(`${key} has an empty value`);
-        } else continue;
+      let filteredDetails: Record<string, any> = {};
+      for (let key of allowedFields) {
+        const value = newDetails[key];
+
+        if (value == undefined || value == null) continue;
+
+        filteredDetails[key] = value;
       }
 
       if (Object.keys(validDetails).length == 0)

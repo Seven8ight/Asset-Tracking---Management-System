@@ -1,5 +1,3 @@
-import type { User } from "../Users/user.types.js";
-
 export type Department = {
   id: string;
   name: string;

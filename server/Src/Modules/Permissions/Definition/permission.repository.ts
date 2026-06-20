@@ -15,11 +15,15 @@ export class PermissionRepo implements PermissionRepository {
     permissionDetails: createPermissionDTO,
   ): Promise<Permission> {
     try {
-      const { name, description } = permissionDetails;
+      const { name, group_name, description } = permissionDetails;
 
       const sqlString: string =
-          "INSERT INTO permissions(name,description) VALUES($1,$2) RETURNING *",
-        sqlQuery = await this.db.query(sqlString, [name, description]);
+          "INSERT INTO permissions(name,group_name,description) VALUES($1,$2,$3) RETURNING *",
+        sqlQuery = await this.db.query(sqlString, [
+          name,
+          group_name,
+          description,
+        ]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
@@ -34,6 +38,7 @@ export class PermissionRepo implements PermissionRepository {
   }
 
   async editPermission(
+    permissionId: string,
     permissionDetails: updatePermissionDTO,
   ): Promise<Permission> {
     try {
@@ -46,8 +51,8 @@ export class PermissionRepo implements PermissionRepository {
         values.push(value);
       }
 
-      const sqlString: string = `UPDATE permissions SET ${keys.join(",")} RETURNING *`,
-        sqlQuery = await this.db.query(sqlString, [...values]);
+      const sqlString: string = `UPDATE permissions SET ${keys.join(",")} WHERE id=$1 RETURNING *`,
+        sqlQuery = await this.db.query(sqlString, [permissionId, ...values]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 

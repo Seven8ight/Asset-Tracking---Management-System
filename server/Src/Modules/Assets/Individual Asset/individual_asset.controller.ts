@@ -6,6 +6,7 @@ import {
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
+import { PermissionChecker } from "../../../Middleware/PermissionChecker.js";
 
 export const IndividualAssetController = async (
   request: IncomingMessage,
@@ -28,7 +29,23 @@ export const IndividualAssetController = async (
         break;
       case "PATCH":
         const patchAssetId = PathnameValidator(pathnames),
-          patchRequestBody: any = await getRequestBody(request),
+          patchRequestBody: any = await getRequestBody(request);
+
+        if (patchRequestBody.is_broken)
+          await PermissionChecker(
+            request,
+            "individual asset",
+            "Declare asset broken",
+          );
+        if (patchRequestBody.is_repaired)
+          await PermissionChecker(
+            request,
+            "individual asset",
+            "Declare asset repaired",
+          );
+
+        const assetPriorUpdate =
+            await service.getIndividualAssets(patchAssetId),
           patchAsset = await service.editIndividualAsset(
             patchAssetId,
             patchRequestBody,
@@ -38,13 +55,19 @@ export const IndividualAssetController = async (
           entity_id: patchAssetId,
           entity_type: "Individual Asset",
           action: "Individual asset update",
-          old_values: {},
-          new_values: {},
+          old_values: assetPriorUpdate,
+          new_values: patchAsset,
         });
 
         sendResponseMessage(200, false, patchAsset, response);
         break;
       case "DELETE":
+        await PermissionChecker(
+          request,
+          "individual asset",
+          "Delete an individual asset",
+        );
+
         const deleteAssetId = PathnameValidator(pathnames);
         await service.deleteIndividualAssets(deleteAssetId);
 

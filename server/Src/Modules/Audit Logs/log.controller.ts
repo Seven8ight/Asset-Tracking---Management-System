@@ -5,6 +5,7 @@ import {
   sendResponseMessage,
 } from "../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
+import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
 
 export const AuditController = async (
   request: IncomingMessage,
@@ -23,9 +24,16 @@ export const AuditController = async (
         const pathname = PathnameValidator(pathnames);
         let requestbody: any;
 
-        if (pathname == "department")
+        if (pathname == "department") {
+          await PermissionChecker(request, "audit", "View departmental logs");
           requestbody = await service.getDepartmentLogs(user.departmentId);
-        else requestbody = await service.getLog(pathname);
+        } else if (pathname == "all") {
+          await PermissionChecker(request, "audit", "View all logs");
+          requestbody = await service.getLogs();
+        } else {
+          await PermissionChecker(request, "audit", "View log");
+          requestbody = await service.getLog(pathname);
+        }
 
         sendResponseMessage(200, false, requestbody, response);
 

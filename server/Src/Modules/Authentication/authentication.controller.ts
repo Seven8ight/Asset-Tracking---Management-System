@@ -18,6 +18,7 @@ import {
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
 import { decode_access_token } from "../../Utilities/Jwt.js";
 import type { PublicUser, User } from "../Users/user.types.js";
+import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
 
 export const AuthenticationController = async (
   request: IncomingMessage,
@@ -82,6 +83,8 @@ export const AuthenticationController = async (
         break;
       case "invite":
         const inviter = AuthValidator(request);
+
+        await PermissionChecker(request, "users", "Invite users");
 
         if (inviter.departmentId == null || !inviter.departmentId)
           return sendResponseMessage(

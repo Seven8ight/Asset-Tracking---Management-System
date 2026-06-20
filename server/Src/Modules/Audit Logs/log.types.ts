@@ -22,6 +22,7 @@ export interface LogRepository {
     newDetails: createLogDTO,
   ) => Promise<Log>;
   getLog: (logId: string) => Promise<Log>;
+  getLogs: () => Promise<Log[]>;
   getDepartmentLogs: (department_id: string) => Promise<Log[]>;
 }
 
@@ -32,5 +33,6 @@ export interface LogService {
     newDetails: createLogDTO,
   ) => Promise<Log>;
   getLog: (logId: string) => Promise<Log>;
+  getLogs: () => Promise<Log[]>;
   getDepartmentLogs: (department_id: string) => Promise<Log[]>;
 }

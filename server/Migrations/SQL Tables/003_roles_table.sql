@@ -2,6 +2,6 @@ CREATE TABLE role(
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT NOT NULL,
-    department_id UUID REFERENCES departments(id) ON DELETE CASCADE NOT NULL,
+    department_id UUID REFERENCES departments(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

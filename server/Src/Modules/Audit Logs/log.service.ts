@@ -61,6 +61,16 @@ export class LogServ implements LogService {
     }
   }
 
+  async getLogs(): Promise<Log[]> {
+    try {
+      const allLogs = await this.repo.getLogs();
+
+      return allLogs;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getDepartmentLogs(department_id: string): Promise<Log[]> {
     try {
       if (!department_id) throw new Error("Branch id must be provided");

@@ -2,17 +2,71 @@ import type { IncomingMessage } from "node:http";
 import { AuthValidator } from "./AuthChecker.js";
 import { userRolesServ } from "../Data Objects/DTO.js";
 
+export type PermissionGroup =
+  | "department"
+  | "users"
+  | "assets"
+  | "individual asset"
+  | "audit"
+  | "asset assignment";
+
+export type PermissionName =
+  // Department
+  | "Department creation"
+  | "Department update"
+  | "View department users"
+  | "View all departments"
+  | "Department deletion"
+
+  // Users
+  | "Invite users"
+  | "Manage user roles"
+  | "View all department users"
+
+  // Assets
+  | "Create assets"
+  | "Edit assets"
+  | "View department asset"
+  | "Delete a department asset"
+
+  // Individual Asset
+  | "Declare asset broken"
+  | "Declare asset repaired"
+  | "Delete an individual asset"
+
+  //Asset assignments
+  | "View an assignment"
+  | "View departmental assignments"
+  | "Assign aset to self"
+
+  // Audit
+  | "View all logs"
+  | "View departmental logs"
+  | "View log";
+
 export const PermissionChecker = async (
   request: IncomingMessage,
-  permissionName: string,
-) => {
-  const user = AuthValidator(request),
-    userRoles = await userRolesServ.getUserRolesWithPermissions(user.userId);
+  permissionGroup: PermissionGroup,
+  permissionName: PermissionName,
+): Promise<void> => {
+  const user = AuthValidator(request);
 
-  const hasPermission = userRoles.roles.some((role) =>
-    role.permissions.some((permission) => permission.name == permissionName),
+  const userRoles = await userRolesServ.getUserRolesWithPermissions(
+    user.userId,
   );
 
-  if (!hasPermission)
-    throw new Error("User does not have permission to perform the action");
+  const hasPermission = userRoles.roles.some((role) =>
+    role.permissions.some(
+      (permission) =>
+        permission.group_name === permissionGroup &&
+        permission.name === permissionName,
+    ),
+  );
+
+  if (!hasPermission) {
+    const error = new Error("Forbidden: user does not have permission");
+    throw error;
+  }
+
+  return;
 };

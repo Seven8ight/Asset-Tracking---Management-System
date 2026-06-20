@@ -23,7 +23,9 @@ export interface AssetRepository {
     assetId: string,
     newAssetDetails: updateIndividualAssetDTO,
   ) => Promise<IndividualAsset>;
+  getIndividualAsset: (individualId: string) => Promise<IndividualAsset>;
   getIndividualAssets: (assetId: string) => Promise<IndividualAsset[]>;
+  deleteIndividualAsset: (assetId: string) => Promise<void>;
   deleteIndividualAssets: (assetId: string) => Promise<void>;
 }
 
@@ -36,6 +38,8 @@ export interface AssetService {
     assetId: string,
     newAssetDetails: updateIndividualAssetDTO,
   ) => Promise<IndividualAsset>;
+  getIndividualAsset: (individualId: string) => Promise<IndividualAsset>;
   getIndividualAssets: (assetsId: string) => Promise<IndividualAsset[]>;
+  deleteIndividualAsset: (assetId: string) => Promise<void>;
   deleteIndividualAssets: (assetId: string) => Promise<void>;
 }

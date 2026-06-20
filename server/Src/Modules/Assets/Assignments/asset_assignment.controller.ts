@@ -6,6 +6,7 @@ import {
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
+import { PermissionChecker } from "../../../Middleware/PermissionChecker.js";
 
 export const AssignmentsController = async (
   request: IncomingMessage,
@@ -24,15 +25,32 @@ export const AssignmentsController = async (
         const getPathname = PathnameValidator(pathnames);
         let requestBody: any;
 
-        if (getPathname == "department")
+        if (getPathname == "department") {
+          await PermissionChecker(
+            request,
+            "asset assignment",
+            "View departmental assignments",
+          );
           requestBody = await service.getDepartmentAssignments(
             user.departmentId,
           );
-        else requestBody = await service.getAssignments(getPathname);
+        } else {
+          await PermissionChecker(
+            request,
+            "asset assignment",
+            "View an assignment",
+          );
+          requestBody = await service.getAssignments(getPathname);
+        }
 
         sendResponseMessage(200, false, requestBody, response);
         break;
       case "POST":
+        await PermissionChecker(
+          request,
+          "asset assignment",
+          "Assign aset to self",
+        );
         const postAssetId = PathnameValidator(pathnames);
 
         const responseBody = await service.assignAsset(

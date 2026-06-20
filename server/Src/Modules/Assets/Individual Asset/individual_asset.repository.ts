@@ -56,6 +56,22 @@ export class IndividualAssetRepo implements AssetRepository {
     }
   }
 
+  async getIndividualAsset(individualId: string): Promise<IndividualAsset> {
+    try {
+      const sqlString = "SELECT * FROM individual_asset WHERE id=$1",
+        sqlQuery = await this.db.query(sqlString, [individualId]);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
+
+      const individualAssetQuery = sqlQuery as QueryResult<IndividualAsset>,
+        individualAsset = individualAssetQuery.rows[0];
+
+      return individualAsset!;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getIndividualAssets(assetsId: string): Promise<IndividualAsset[]> {
     try {
       const sqlString: string =
@@ -68,6 +84,24 @@ export class IndividualAssetRepo implements AssetRepository {
         assets = editQuery.rows;
 
       return assets;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteIndividualAsset(assetId: string) {
+    try {
+      const sqlString = `DELETE FROM individual_assets
+          WHERE id = (
+              SELECT id 
+              FROM individual_assets
+              WHERE is_broken IS NOT 'TRUE' OR is_repaired IS NOT 'TRUE'
+              ORDER BY RANDOM()         
+              LIMIT 1                   
+          ) and asset_id=$1;`,
+        sqlQuery = await this.db.query(sqlString, [assetId]);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
     } catch (error) {
       throw error;
     }

@@ -7,7 +7,7 @@ export type Role = {
   department_id: string;
 };
 
-export type createRoleDTO = Omit<Role, "id">;
+export type createRoleDTO = Omit<Role, "id" | "department_id">;
 export type updateRoleDTO = Partial<Omit<Role, "id">>;
 
 export type RoleWithPermissions = {
@@ -19,7 +19,7 @@ export type RoleWithPermissions = {
 };
 
 export interface RoleRepository {
-  createRole: (details: createRoleDTO, departmentId: string) => Promise<Role>;
+  createRole: (details: createRoleDTO, departmentId?: string) => Promise<Role>;
   editRole: (roleId: string, newDetails: updateRoleDTO) => Promise<Role>;
   getRole: (roleId: string) => Promise<Role>;
   getRoles: () => Promise<Role[]>;
@@ -27,7 +27,7 @@ export interface RoleRepository {
   getRoleWithPermissions: (roleId: string) => Promise<RoleWithPermissions>;
 }
 export interface RoleService {
-  createRole: (details: createRoleDTO, departmentId: string) => Promise<Role>;
+  createRole: (details: createRoleDTO, departmentId?: string) => Promise<Role>;
   editRole: (roleId: string, newDetails: updateRoleDTO) => Promise<Role>;
   getRole: (roleId: string) => Promise<Role>;
   getRoles: () => Promise<Role[]>;

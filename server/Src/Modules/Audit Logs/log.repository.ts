@@ -66,4 +66,20 @@ export class LogRepo implements LogRepository {
       throw error;
     }
   }
+
+  async getLogs(): Promise<Log[]> {
+    try {
+      const sqlString = "SELECT * FROM audit_logs",
+        sqlQuery = await this.db.query(sqlString, []);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
+
+      const allLogsQuery = sqlQuery as QueryResult<Log>,
+        allLogs = allLogsQuery.rows;
+
+      return allLogs;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

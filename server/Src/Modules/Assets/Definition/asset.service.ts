@@ -1,3 +1,5 @@
+import { diff } from "node:util";
+import { individualAssetServ } from "../../../Data Objects/DTO.js";
 import type {
   Asset,
   AssetRepository,
@@ -74,10 +76,28 @@ export class AssetsServ implements AssetService {
         filteredKeyValues[key] = value;
       }
 
-      const patchAsset = this.repo.editAsset(
+      const patchAsset = await this.repo.editAsset(
         assetsId,
         filteredKeyValues as updateAssetDTO,
       );
+
+      if (filteredKeyValues.quantity) {
+        const retrieveIndividualAssets =
+          await individualAssetServ.getIndividualAssets(assetsId);
+
+        if (patchAsset.quantity != retrieveIndividualAssets.length) {
+          const difference =
+            retrieveIndividualAssets.length - patchAsset.quantity;
+
+          if (difference < 0)
+            await individualAssetServ.deleteIndividualAsset(assetsId);
+          else if (difference > 0)
+            await individualAssetServ.createIndividualAsset(
+              patchAsset.department_id,
+              assetsId,
+            );
+        }
+      }
 
       return patchAsset;
     } catch (error) {

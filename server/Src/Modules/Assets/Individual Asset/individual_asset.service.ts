@@ -65,6 +65,19 @@ export class IndividualAssetServ implements AssetService {
     }
   }
 
+  async getIndividualAsset(individualId: string): Promise<IndividualAsset> {
+    try {
+      if (!individualId)
+        throw new Error("Individual asset id must be provided");
+
+      const individualAsset = await this.repo.getIndividualAsset(individualId);
+
+      return individualAsset;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getIndividualAssets(assetsId: string): Promise<IndividualAsset[]> {
     try {
       if (!assetsId) throw new Error("Main Assets id not provided");
@@ -72,6 +85,16 @@ export class IndividualAssetServ implements AssetService {
       const assets = await this.repo.getIndividualAssets(assetsId);
 
       return assets;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteIndividualAsset(assetId: string): Promise<void> {
+    try {
+      if (!assetId) throw new Error("Asset id must be provided");
+
+      await this.repo.deleteIndividualAsset(assetId);
     } catch (error) {
       throw error;
     }

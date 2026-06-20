@@ -6,6 +6,7 @@ import {
 } from "../../Utilities/HttpFunctions.js";
 import { DepartmentService, logsServ } from "../../Data Objects/DTO.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
+import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
 
 export const DepartmentController = async (
   request: IncomingMessage,
@@ -24,14 +25,29 @@ export const DepartmentController = async (
         const pathname = PathnameValidator(pathnames);
         let requestBody: any;
 
-        if (pathname == "all") requestBody = await service.getAllDepartments();
-        else if (pathname == "allusers")
+        if (pathname == "all") {
+          await PermissionChecker(
+            request,
+            "department",
+            "View all departments",
+          );
+          requestBody = await service.getAllDepartments();
+        } else if (pathname == "allusers") {
+          await PermissionChecker(
+            request,
+            "department",
+            "View all department users",
+          );
           requestBody = await service.getUsersInDepartments(user.departmentId);
-        else requestBody = await service.getDepartment(pathname);
+        } else {
+          requestBody = await service.getDepartment(pathname);
+        }
 
         sendResponseMessage(200, false, requestBody, response);
         break;
       case "POST":
+        await PermissionChecker(request, "department", "Department creation");
+
         const postDepartmentDetails: any = await getRequestBody(request),
           newDepartment = await service.createDepartment(postDepartmentDetails);
 
@@ -46,6 +62,8 @@ export const DepartmentController = async (
         sendResponseMessage(201, false, newDepartment, response);
         break;
       case "PATCH":
+        await PermissionChecker(request, "department", "Department update");
+
         const patchDepartmentId = PathnameValidator(pathnames),
           patchDepartmentDetails: any = await getRequestBody(request),
           originalDepartment = await service.getDepartment(patchDepartmentId),
@@ -65,6 +83,7 @@ export const DepartmentController = async (
         sendResponseMessage(200, false, patchedDepartment, response);
         break;
       case "DELETE":
+        await PermissionChecker(request, "department", "Department deletion");
         const deleteDepartmentId = PathnameValidator(pathnames);
 
         await logsServ.createLog(deleteDepartmentId, user.userId, {

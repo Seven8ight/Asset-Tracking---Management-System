@@ -17,6 +17,7 @@ export type RoleWithPermissions = {
   permissions: {
     permissionId: string;
     name: string;
+    group_name: string;
     description: string | null;
   }[];
 };

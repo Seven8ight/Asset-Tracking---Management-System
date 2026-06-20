@@ -5,6 +5,7 @@ import {
 } from "../../Utilities/HttpFunctions.js";
 import { userServ } from "../../Data Objects/DTO.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
+import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
 
 export const UserController = async (
   request: IncomingMessage,
@@ -15,6 +16,8 @@ export const UserController = async (
   try {
     switch (request.method) {
       case "GET": {
+        await PermissionChecker(request, "users", "Manage user roles");
+
         const userGetDetails = AuthValidator(request);
 
         const user = service.getUser(userGetDetails.userId);
@@ -23,6 +26,8 @@ export const UserController = async (
         break;
       }
       case "PATCH":
+        await PermissionChecker(request, "users", "Manage user roles");
+
         const userPatchDetails = AuthValidator(request);
 
         const patchUserDetails: any = await getRequestBody(request),
@@ -35,6 +40,8 @@ export const UserController = async (
 
         break;
       case "DELETE":
+        await PermissionChecker(request, "users", "Manage user roles");
+
         const userDeletionDetails = AuthValidator(request);
 
         await service.deleteUser(

@@ -14,16 +14,27 @@ export class RoleRepo implements RoleRepository {
 
   async createRole(
     details: createRoleDTO,
-    departmentId: string,
+    departmentId?: string,
   ): Promise<Role> {
     try {
-      const sqlString: string =
-          "INSERT INTO role(name,description,department_id) VALUES($1,$2,$3) RETURNING *",
+      let sqlString: string, sqlQuery;
+
+      if (departmentId) {
+        sqlString =
+          "INSERT INTO role(name,description,department_id) VALUES($1,$2,$3) RETURNING *";
         sqlQuery = await this.db.query(sqlString, [
           details.name,
           details.description,
           departmentId,
         ]);
+      } else {
+        sqlString =
+          "INSERT INTO role(name,description) VALUES($1,$2) RETURNING *";
+        sqlQuery = await this.db.query(sqlString, [
+          details.name,
+          details.description,
+        ]);
+      }
 
       if (!sqlQuery) throw new Error("SQL Query error");
 

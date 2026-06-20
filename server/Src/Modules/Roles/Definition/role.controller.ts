@@ -6,6 +6,7 @@ import {
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
 import { logsServ, rolesService } from "../../../Data Objects/DTO.js";
+import { PermissionChecker } from "../../../Middleware/PermissionChecker.js";
 
 export const RoleController = async (
   request: IncomingMessage,
@@ -21,6 +22,7 @@ export const RoleController = async (
 
     switch (request.method) {
       case "GET":
+        await PermissionChecker(request, "users", "Manage user roles");
         let responseBody: any;
 
         if (!pathNames[2]) responseBody = await service.getRoles();
@@ -44,6 +46,8 @@ export const RoleController = async (
         sendResponseMessage(200, false, responseBody, response);
         break;
       case "POST":
+        await PermissionChecker(request, "users", "Manage user roles");
+
         const postRoleBody: any = await getRequestBody(request),
           createRole = await service.createRole(
             postRoleBody,
@@ -61,6 +65,7 @@ export const RoleController = async (
         sendResponseMessage(201, false, createRole, response);
         break;
       case "PATCH":
+        await PermissionChecker(request, "users", "Manage user roles");
         const patchRoleId = PathnameValidator(pathNames),
           patchRoleBody: any = await getRequestBody(request),
           beforeUpdateRole = await service.getRole(patchRoleId),
