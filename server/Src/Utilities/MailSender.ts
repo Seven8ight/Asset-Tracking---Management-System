@@ -1,37 +1,40 @@
 import { Resend } from "resend";
 import { RESEND_KEY } from "../Config/Env.js";
 import type { PublicUser, User } from "../Modules/Users/user.types.js";
+import { userServ } from "../Data Objects/DTO.js";
 
 const resend = new Resend(RESEND_KEY);
 
 export const sendPasswordReset = async (
-    user: User | PublicUser,
+    user: PublicUser,
     redirectLink: string,
   ) => {
     try {
-      await resend.emails.send({
+      const emailStatus = await resend.emails.send({
         from: "No-reply <noreply@ferracorp.com>",
         to: user.email,
         template: {
           id: "013e03e7-f355-4c37-84c9-bbd7581029b1",
           variables: {
             redirectlink: redirectLink,
-            user: user.name,
+            user: user.username,
           },
         },
       });
+
+      if (emailStatus.error) throw new Error(`${emailStatus.error.message}`);
     } catch (error) {
       throw error;
     }
   },
   sendMemberInvitation = async (
-    user: User,
+    user: PublicUser,
     managername: string,
     departmentName: string,
     redirectLink: string,
   ) => {
     try {
-      await resend.emails.send({
+      const emailStatus = await resend.emails.send({
         from: "No-reply <noreply@ferracorp.com>",
         to: user.email,
         template: {
@@ -40,10 +43,17 @@ export const sendPasswordReset = async (
             departmentmanager: managername,
             departmentname: departmentName,
             redirectlink: redirectLink,
-            user: user.name,
+            user: user.username,
           },
         },
       });
+
+      if (emailStatus.error) {
+        await userServ.deleteUser(user.id);
+        throw new Error(
+          `Email error: ${emailStatus.error.message} User deleted try again`,
+        );
+      }
     } catch (error) {
       throw error;
     }

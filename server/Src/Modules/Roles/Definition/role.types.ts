@@ -22,6 +22,7 @@ export interface RoleRepository {
   createRole: (details: createRoleDTO, departmentId?: string) => Promise<Role>;
   editRole: (roleId: string, newDetails: updateRoleDTO) => Promise<Role>;
   getRole: (roleId: string) => Promise<Role>;
+  getDepartmentRoles: (departmentId: string) => Promise<Role[]>;
   getRoles: () => Promise<Role[]>;
   deleteRole: (roleId: string) => Promise<void>;
   getRoleWithPermissions: (roleId: string) => Promise<RoleWithPermissions>;
@@ -30,6 +31,7 @@ export interface RoleService {
   createRole: (details: createRoleDTO, departmentId?: string) => Promise<Role>;
   editRole: (roleId: string, newDetails: updateRoleDTO) => Promise<Role>;
   getRole: (roleId: string) => Promise<Role>;
+  getDepartmentRoles: (departmentId: string) => Promise<Role[]>;
   getRoles: () => Promise<Role[]>;
   deleteRole: (roleId: string) => Promise<void>;
   getRoleWithPermissions: (roleId: string) => Promise<RoleWithPermissions>;

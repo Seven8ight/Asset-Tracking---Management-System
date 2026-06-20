@@ -10,18 +10,29 @@ export class RolePermissionServ implements RolepermissionService {
 
   async createRPermission(
     roleId: string,
-    permissionId: string,
+    permissionId: string | string[],
   ): Promise<RolePermission> {
     try {
       if (!roleId || !permissionId)
-        throw new Error("User id and permission id must be provided");
+        throw new Error("role id and permission id must be provided");
 
-      const userPCreation: RolePermission = await this.RPRepo.createRPermission(
-        roleId,
-        permissionId,
-      );
+      let rolePermissionCreation: any;
 
-      return userPCreation;
+      if (typeof permissionId == "string")
+        rolePermissionCreation = await this.RPRepo.createRPermission(
+          roleId,
+          permissionId,
+        );
+      else {
+        for (let permission of permissionId) {
+          rolePermissionCreation = await this.RPRepo.createRPermission(
+            roleId,
+            permission,
+          );
+        }
+      }
+
+      return rolePermissionCreation;
     } catch (error) {
       Warning(`Error at role creation permission`);
       throw error;

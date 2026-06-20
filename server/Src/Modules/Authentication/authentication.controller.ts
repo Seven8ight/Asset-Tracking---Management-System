@@ -8,6 +8,8 @@ import {
   authService,
   DepartmentService,
   logsServ,
+  rolesService,
+  userRolesServ,
   userServ,
 } from "../../Data Objects/DTO.js";
 import { REDIRECT_URL } from "../../Config/Env.js";
@@ -17,7 +19,7 @@ import {
 } from "../../Utilities/MailSender.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
 import { decode_access_token } from "../../Utilities/Jwt.js";
-import type { PublicUser, User } from "../Users/user.types.js";
+import type { PublicUser } from "../Users/user.types.js";
 import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
 
 export const AuthenticationController = async (
@@ -35,23 +37,14 @@ export const AuthenticationController = async (
     if (
       requestPath == "register" ||
       requestPath == "login" ||
-      requestPath == "refresh"
+      requestPath == "refresh" ||
+      requestPath == "invite"
     ) {
       if (request.method != "POST")
-        return sendResponseMessage(
-          405,
-          true,
-          "Invalid HTTP Header method",
-          response,
-        );
+        return sendResponseMessage(405, true, "Use POST instead", response);
     } else {
       if (request.method != "GET")
-        return sendResponseMessage(
-          405,
-          true,
-          "Invalid HTTP header method",
-          response,
-        );
+        return sendResponseMessage(405, true, "Use GET instead", response);
     }
 
     switch (requestPath) {
@@ -85,7 +78,6 @@ export const AuthenticationController = async (
         const inviter = AuthValidator(request);
 
         await PermissionChecker(request, "users", "Invite users");
-
         if (inviter.departmentId == null || !inviter.departmentId)
           return sendResponseMessage(
             400,
@@ -103,11 +95,29 @@ export const AuthenticationController = async (
             inviter.departmentId,
           );
 
+        await userServ.assignUserToDepartment(
+          decodedUser.id,
+          inviter.departmentId,
+        );
+
+        const refreshedUserDetails = await authService.login(userPostDetails),
+          retrieveUserDetails = decode_access_token(
+            refreshedUserDetails.accessToken,
+          ) as PublicUser;
+
+        const roleAssignment = await rolesService.getRole(
+          userPostDetails.role_id,
+        );
+        await userRolesServ.createUserRole(
+          retrieveUserDetails.id,
+          roleAssignment.id,
+        );
+
         await sendMemberInvitation(
-          decodedUser as User,
+          retrieveUserDetails,
           department.manager_name,
           department.name,
-          `${REDIRECT_URL}/invite?token=${invitedUser.refreshToken}`,
+          `${REDIRECT_URL}/invite?token=${refreshedUserDetails.refreshToken}`,
         );
 
         await logsServ.createLog(inviter.departmentId, inviter.userId, {

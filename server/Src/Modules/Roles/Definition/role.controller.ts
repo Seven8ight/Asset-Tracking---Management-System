@@ -5,7 +5,11 @@ import {
   sendResponseMessage,
 } from "../../../Utilities/HttpFunctions.js";
 import { AuthValidator } from "../../../Middleware/AuthChecker.js";
-import { logsServ, rolesService } from "../../../Data Objects/DTO.js";
+import {
+  logsServ,
+  rolesService,
+  userRolesServ,
+} from "../../../Data Objects/DTO.js";
 import { PermissionChecker } from "../../../Middleware/PermissionChecker.js";
 
 export const RoleController = async (
@@ -23,24 +27,27 @@ export const RoleController = async (
     switch (request.method) {
       case "GET":
         await PermissionChecker(request, "users", "Manage user roles");
+
+        const pathname = PathnameValidator(pathNames);
         let responseBody: any;
 
-        if (!pathNames[2]) responseBody = await service.getRoles();
-        else {
-          const pathname = PathnameValidator(pathNames);
+        if (pathname == "all") responseBody = await service.getRoles();
+        else if (pathname == "department") {
+          if (!user.departmentId)
+            throw new Error("You must be a member of a department");
 
-          if (pathname == "permissions") {
-            if (!pathNames[3])
-              return sendResponseMessage(
-                400,
-                true,
-                "Invalid role id provided",
-                response,
-              );
+          responseBody = await service.getDepartmentRoles(user.departmentId);
+        } else if (pathname == "permissions") {
+          if (!pathNames[3])
+            return sendResponseMessage(
+              400,
+              true,
+              "Invalid role id provided",
+              response,
+            );
 
-            const roleId = pathNames[3];
-            responseBody = await service.getRoleWithPermissions(roleId);
-          }
+          const roleId = pathNames[3];
+          responseBody = await service.getRoleWithPermissions(roleId);
         }
 
         sendResponseMessage(200, false, responseBody, response);
@@ -66,9 +73,23 @@ export const RoleController = async (
         break;
       case "PATCH":
         await PermissionChecker(request, "users", "Manage user roles");
+
         const patchRoleId = PathnameValidator(pathNames),
-          patchRoleBody: any = await getRequestBody(request),
-          beforeUpdateRole = await service.getRole(patchRoleId),
+          patchRoleBody: any = await getRequestBody(request);
+
+        const allRoles = await rolesService.getRoles(),
+          userRoles = await userRolesServ.getUserRoles(user.userId);
+
+        for (let role of allRoles) {
+          if (patchRoleId == role.id) {
+            if (role.department_id == null) {
+              if (!userRoles.roles.some((role) => role.name == "SaaS admin"))
+                throw new Error("Unauthorized to do so");
+            }
+          }
+        }
+
+        const beforeUpdateRole = await service.getRole(patchRoleId),
           updateRole = await service.editRole(patchRoleId, patchRoleBody);
 
         await logsServ.createLog(user.departmentId, user.userId, {

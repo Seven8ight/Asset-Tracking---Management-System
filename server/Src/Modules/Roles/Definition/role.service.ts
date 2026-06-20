@@ -1,5 +1,4 @@
 import { Warning } from "../../../Utilities/Logger.js";
-import type { createAssetDTO } from "../../Assets/Definition/asset.types.js";
 import type {
   createRoleDTO,
   Role,
@@ -10,7 +9,7 @@ import type {
 } from "./role.types.js";
 
 export class Roleservice implements RoleService {
-  constructor(private roleRepo: RoleRepository) {}
+  constructor(private repo: RoleRepository) {}
 
   async createRole(
     details: createRoleDTO,
@@ -29,7 +28,7 @@ export class Roleservice implements RoleService {
           throw new Error(`${key} has an invalid value`);
       }
 
-      const createRole = await this.roleRepo.createRole(details, departmentId);
+      const createRole = await this.repo.createRole(details, departmentId);
 
       return createRole;
     } catch (error) {
@@ -45,19 +44,18 @@ export class Roleservice implements RoleService {
       let validDetails: Record<string, any> = {},
         allowedFields: (keyof updateRoleDTO)[] = ["name", "description"];
 
-      let filteredDetails: Record<string, any> = {};
       for (let key of allowedFields) {
         const value = newDetails[key];
 
         if (value == undefined || value == null) continue;
 
-        filteredDetails[key] = value;
+        validDetails[key] = value;
       }
 
       if (Object.keys(validDetails).length == 0)
         throw new Error("No valid details to update");
 
-      const updateQuery = await this.roleRepo.editRole(roleId, newDetails);
+      const updateQuery = await this.repo.editRole(roleId, validDetails);
       return updateQuery;
     } catch (error) {
       Warning("Error occured at create role");
@@ -69,7 +67,7 @@ export class Roleservice implements RoleService {
     try {
       if (!roleId) throw new Error("Role id must be provided");
 
-      const role = await this.roleRepo.getRole(roleId);
+      const role = await this.repo.getRole(roleId);
 
       return role;
     } catch (error) {
@@ -77,9 +75,22 @@ export class Roleservice implements RoleService {
     }
   }
 
+  async getDepartmentRoles(departmentId: string): Promise<Role[]> {
+    try {
+      if (!departmentId) throw new Error("Department id must be provided");
+
+      const allDepartmentRoles =
+        await this.repo.getDepartmentRoles(departmentId);
+
+      return allDepartmentRoles;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getRoles(): Promise<Role[]> {
     try {
-      const retrieveRoles = await this.roleRepo.getRoles();
+      const retrieveRoles = await this.repo.getRoles();
       return retrieveRoles;
     } catch (error) {
       Warning("Error occured at create role");
@@ -89,8 +100,10 @@ export class Roleservice implements RoleService {
 
   async getRoleWithPermissions(roleId: string): Promise<RoleWithPermissions> {
     try {
+      if (!roleId) throw new Error("Role id must be provided");
+
       const rolePermissions: RoleWithPermissions =
-        await this.roleRepo.getRoleWithPermissions(roleId);
+        await this.repo.getRoleWithPermissions(roleId);
 
       return rolePermissions;
     } catch (error) {
@@ -103,7 +116,7 @@ export class Roleservice implements RoleService {
     try {
       if (!roleId) throw new Error("Role id not provided");
 
-      await this.roleRepo.deleteRole(roleId);
+      await this.repo.deleteRole(roleId);
     } catch (error) {
       Warning("Error occured at create role");
       throw error;

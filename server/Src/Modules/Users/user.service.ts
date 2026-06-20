@@ -2,6 +2,7 @@ import type { UserRepo } from "./user.repository.js";
 import type {
   createUserDTO,
   PublicUser,
+  updateUserDTO,
   User,
   UserService,
 } from "./user.types.js";
@@ -14,17 +15,35 @@ export class UserServ implements UserService {
     return publicUser;
   }
 
+  async assignUserToDepartment(
+    userId: string,
+    departmentId: string,
+  ): Promise<PublicUser> {
+    try {
+      if (!userId || !departmentId)
+        throw new Error("user id and department id must be provided");
+
+      const updatedUser = await this.repo.assignUserToDepartment(
+        userId,
+        departmentId,
+      );
+
+      return this.createPublicUser(updatedUser);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async editUser(
     user_id: string,
-    user_details: createUserDTO,
+    user_details: updateUserDTO,
   ): Promise<PublicUser> {
     try {
       if (!user_id || !user_details)
         throw new Error("User id and new user details must be provided");
 
       const allowedFields: string[] = [
-        "department_id",
-        "name",
+        "username",
         "phone",
         "email",
         "password",
@@ -39,6 +58,9 @@ export class UserServ implements UserService {
 
         filteredUserDetails[key] = value;
       }
+
+      if (Object.keys(filteredUserDetails).length <= 0)
+        throw new Error("Nothing to update");
 
       const patchedUser = await this.repo.editUser(
         user_id,
@@ -63,12 +85,11 @@ export class UserServ implements UserService {
     }
   }
 
-  async deleteUser(department_id: string, user_id: string): Promise<void> {
+  async deleteUser(user_id: string): Promise<void> {
     try {
-      if (!department_id || !user_id)
-        throw new Error("Department id and user id must be provided");
+      if (!user_id) throw new Error("user id must be provided");
 
-      await this.repo.deleteUser(department_id, user_id);
+      await this.repo.deleteUser(user_id);
     } catch (error) {
       throw error;
     }

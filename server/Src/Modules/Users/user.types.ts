@@ -1,7 +1,7 @@
 export type User = {
   id: string;
   department_id: string;
-  name: string;
+  username: string;
   phone: string;
   email: string;
   password: string;
@@ -12,7 +12,7 @@ export type User = {
 
 export type createUserDTO = Pick<
   User,
-  "department_id" | "name" | "phone" | "email" | "password"
+  "department_id" | "username" | "phone" | "email" | "password"
 >;
 
 export type updateUserDTO =
@@ -25,12 +25,20 @@ export type updateUserDTO =
 export type PublicUser = Omit<User, "password">;
 
 export interface UserRepository {
+  assignUserToDepartment: (
+    userId: string,
+    departmentId: string,
+  ) => Promise<User>;
   editUser: (userId: string, newDetails: updateUserDTO) => Promise<User>;
   getUser: (userId: string) => Promise<User>;
-  deleteUser: (department_id: string, userId: string) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
 }
 export interface UserService {
+  assignUserToDepartment: (
+    userId: string,
+    departmentId: string,
+  ) => Promise<PublicUser>;
   editUser: (userId: string, userDetails: createUserDTO) => Promise<PublicUser>;
   getUser: (userId: string) => Promise<PublicUser>;
-  deleteUser: (department_id: string, userId: string) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
 }

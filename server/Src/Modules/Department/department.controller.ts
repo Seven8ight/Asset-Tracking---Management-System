@@ -4,7 +4,11 @@ import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../Utilities/HttpFunctions.js";
-import { DepartmentService, logsServ } from "../../Data Objects/DTO.js";
+import {
+  DepartmentService,
+  logsServ,
+  userServ,
+} from "../../Data Objects/DTO.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
 import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
 
@@ -46,10 +50,18 @@ export const DepartmentController = async (
         sendResponseMessage(200, false, requestBody, response);
         break;
       case "POST":
+        if (user.departmentId)
+          throw new Error("User is already part of a department");
+
         await PermissionChecker(request, "department", "Department creation");
 
         const postDepartmentDetails: any = await getRequestBody(request),
-          newDepartment = await service.createDepartment(postDepartmentDetails);
+          newDepartment = await service.createDepartment(
+            user.userId,
+            postDepartmentDetails,
+          );
+
+        await userServ.assignUserToDepartment(user.userId, newDepartment.id);
 
         await logsServ.createLog(newDepartment.id, user.userId, {
           entity_id: newDepartment.id,
@@ -64,16 +76,15 @@ export const DepartmentController = async (
       case "PATCH":
         await PermissionChecker(request, "department", "Department update");
 
-        const patchDepartmentId = PathnameValidator(pathnames),
-          patchDepartmentDetails: any = await getRequestBody(request),
-          originalDepartment = await service.getDepartment(patchDepartmentId),
+        const patchDepartmentDetails: any = await getRequestBody(request),
+          originalDepartment = await service.getDepartment(user.departmentId),
           patchedDepartment = await service.editDepartment(
-            patchDepartmentId,
+            user.departmentId,
             patchDepartmentDetails,
           );
 
-        await logsServ.createLog(patchDepartmentId, user.userId, {
-          entity_id: patchDepartmentId,
+        await logsServ.createLog(user.departmentId, user.userId, {
+          entity_id: user.departmentId,
           entity_type: "Department entity",
           action: "Editing department",
           old_values: originalDepartment,

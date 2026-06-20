@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   getRequestBody,
+  PathnameValidator,
   sendResponseMessage,
 } from "../../Utilities/HttpFunctions.js";
 import { userServ } from "../../Data Objects/DTO.js";
@@ -11,50 +12,38 @@ export const UserController = async (
   request: IncomingMessage,
   response: ServerResponse<IncomingMessage>,
 ) => {
+  const requestUrl = new URL(request.url!, `http://${request.headers.host}`),
+    pathnames = requestUrl.pathname.split("/").filter(Boolean);
+
   const service = userServ;
 
   try {
+    const user = AuthValidator(request);
+
     switch (request.method) {
-      case "GET": {
+      case "GET":
         await PermissionChecker(request, "users", "Manage user roles");
+        const specifiedUser = PathnameValidator(pathnames);
 
-        const userGetDetails = AuthValidator(request);
-
-        const user = service.getUser(userGetDetails.userId);
-        sendResponseMessage(200, false, user, response);
+        const userRetrieved = await service.getUser(specifiedUser);
+        sendResponseMessage(200, false, userRetrieved, response);
 
         break;
-      }
       case "PATCH":
         await PermissionChecker(request, "users", "Manage user roles");
 
-        const userPatchDetails = AuthValidator(request);
-
         const patchUserDetails: any = await getRequestBody(request),
-          patchedUser = await service.editUser(
-            userPatchDetails.userId,
-            patchUserDetails,
-          );
+          patchedUser = await service.editUser(user.userId, patchUserDetails);
 
         sendResponseMessage(201, false, patchedUser, response);
 
         break;
       case "DELETE":
-        await PermissionChecker(request, "users", "Manage user roles");
-
         const userDeletionDetails = AuthValidator(request);
 
-        await service.deleteUser(
-          userDeletionDetails.departmentId,
-          userDeletionDetails.userId,
-        );
+        await service.deleteUser(userDeletionDetails.userId);
 
-        sendResponseMessage(
-          204,
-          false,
-          "User softly deleted successfully",
-          response,
-        );
+        sendResponseMessage(204, false, "User deleted successfully", response);
         break;
       default:
         sendResponseMessage(405, true, "Invalid http method", response);

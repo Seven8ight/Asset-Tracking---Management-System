@@ -1,4 +1,4 @@
-import type { IncomingMessage, ServerResponse } from "http";
+import { get, type IncomingMessage, type ServerResponse } from "http";
 import type { Permission } from "./permission.types.js";
 import {
   getRequestBody,
@@ -19,14 +19,12 @@ export const PermissionController = async (
   try {
     switch (request.method) {
       case "GET":
+        const getPathname = PathnameValidator(pathNames);
         let responseBody: any;
 
-        if (!pathNames[2]) responseBody = await service.getAllPermission();
-        else {
-          const permissionId = PathnameValidator(pathNames);
-
-          responseBody = await service.getPermission(permissionId);
-        }
+        if (getPathname == "all")
+          responseBody = await service.getAllPermission();
+        else responseBody = await service.getPermission(getPathname);
 
         sendResponseMessage(200, false, responseBody, response);
 
@@ -41,10 +39,13 @@ export const PermissionController = async (
 
         break;
       case "PATCH":
-        const patchReqBody: any = await getRequestBody(request);
+        const patchPermissionId: string = PathnameValidator(pathNames),
+          patchReqBody: any = await getRequestBody(request);
 
-        const permissionUpdate: Permission =
-          await service.editPermission(patchReqBody);
+        const permissionUpdate: Permission = await service.editPermission(
+          patchPermissionId,
+          patchReqBody,
+        );
 
         sendResponseMessage(200, false, permissionUpdate, response);
 

@@ -8,20 +8,21 @@ import type {
   FullDepartmentDetails,
   updateDepartmentDTO,
 } from "./department.types.js";
-import type { User } from "../Users/user.types.js";
 
 export class DepartmentRepo implements DepartmentRepository {
   constructor(private db: Database) {}
 
   async createDepartment(
+    manager_id: string,
     departmentDetails: createDepartmentDTO,
   ): Promise<Department> {
     try {
-      const sqlString: string = `INSERT INTO departments(name,description,color) VALUES($1,$2,$3) RETURNING *`,
+      const sqlString: string = `INSERT INTO departments(name,description,color,manager_id) VALUES($1,$2,$3,$4) RETURNING *`,
         sqlQuery = await this.db.query(sqlString, [
           departmentDetails.name,
           departmentDetails.description,
           departmentDetails.color,
+          manager_id,
         ]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -65,7 +66,7 @@ export class DepartmentRepo implements DepartmentRepository {
 
   async getDepartment(departmentId: string): Promise<FullDepartmentDetails> {
     try {
-      const sqlString: string = `SELECT d.*,u.name as manager_name FROM departments d JOIN users u ON department.manager_id=u.id WHERE d.id=$1`,
+      const sqlString: string = `SELECT d.*,u.username as manager_name FROM departments d JOIN users u ON d.manager_id=u.id WHERE d.id=$1`,
         sqlQuery = await this.db.query(sqlString, [departmentId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -81,7 +82,7 @@ export class DepartmentRepo implements DepartmentRepository {
 
   async getAllDepartments(): Promise<FullDepartmentDetails[]> {
     try {
-      const sqlString: string = `SELECT d.*,u.name as manager_name FROM departments d JOIN users u ON department.manager_id=u.id`,
+      const sqlString: string = `SELECT d.*,u.username as manager_name FROM departments d JOIN users u ON d.manager_id=u.id`,
         sqlQuery = await this.db.query(sqlString);
 
       if (!sqlQuery) throw new Error("SQL Query error");

@@ -7,7 +7,9 @@ export type UserRole = {
 
 export type UserSpecificRoles = {
   userId: string;
-  roles: string[];
+  roles: {
+    name: string;
+  }[];
 };
 
 export type RoleWithPermissions = {

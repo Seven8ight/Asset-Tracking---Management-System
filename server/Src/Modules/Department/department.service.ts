@@ -12,10 +12,12 @@ export class DepartmentServ implements DepartmentService {
   constructor(private repo: DepartmentRepository) {}
 
   async createDepartment(
+    manager_id: string,
     departmentDetails: createDepartmentDTO,
   ): Promise<Department> {
     try {
       if (!departmentDetails) throw new Error("Department details missing");
+      if (!manager_id) throw new Error("Manager id must be provided");
 
       const allowedFields: (keyof createDepartmentDTO)[] = [
         "color",
@@ -35,6 +37,7 @@ export class DepartmentServ implements DepartmentService {
       }
 
       const newDepartment = await this.repo.createDepartment(
+        manager_id,
         filteredDepartmentDetails as createDepartmentDTO,
       );
 

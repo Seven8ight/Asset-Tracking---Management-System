@@ -6,6 +6,26 @@ import type { updateUserDTO, User, UserRepository } from "./user.types.js";
 export class UserRepo implements UserRepository {
   constructor(private db: Database) {}
 
+  async assignUserToDepartment(
+    userId: string,
+    departmentId: string,
+  ): Promise<User> {
+    try {
+      const sqlString =
+          "UPDATE users SET department_id=$1 WHERE id=$2 RETURNING *",
+        sqlQuery = await this.db.query(sqlString, [departmentId, userId]);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
+
+      const resultQuery = sqlQuery as QueryResult<User>,
+        result = resultQuery.rows[0];
+
+      return result!;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async editUser(userId: string, newDetails: updateUserDTO): Promise<User> {
     try {
       let keys: string[] = [],
@@ -49,13 +69,12 @@ export class UserRepo implements UserRepository {
     }
   }
 
-  async deleteUser(department_id: string, userId: string): Promise<void> {
+  async deleteUser(userId: string): Promise<void> {
     try {
-      const date = new Date();
+      const sqlString = "DELETE FROM users WHERE id=$1",
+        sqlQuery = await this.db.query(sqlString, [userId]);
 
-      await this.editUser(userId, {
-        deleted_at: date.toUTCString(),
-      });
+      if (!sqlQuery) throw new Error("SQL Query error");
     } catch (error) {
       ErrorMsg(error as Error);
       throw error;

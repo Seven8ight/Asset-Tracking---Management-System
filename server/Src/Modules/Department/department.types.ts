@@ -26,6 +26,7 @@ export type updateDepartmentDTO = Partial<createDepartmentDTO>;
 
 export interface DepartmentRepository {
   createDepartment: (
+    manager_id: string,
     departmentDetails: createDepartmentDTO,
   ) => Promise<Department>;
   editDepartment: (
@@ -40,6 +41,7 @@ export interface DepartmentRepository {
 
 export interface DepartmentService {
   createDepartment: (
+    manager_id: string,
     departmentDetails: createDepartmentDTO,
   ) => Promise<Department>;
   editDepartment: (

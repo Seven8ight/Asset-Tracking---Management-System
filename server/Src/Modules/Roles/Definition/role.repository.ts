@@ -74,6 +74,23 @@ export class RoleRepo implements RoleRepository {
     }
   }
 
+  async getDepartmentRoles(departmentId: string): Promise<Role[]> {
+    try {
+      const sqlString =
+          "select * from role where department_id=$1 or department_id is null",
+        sqlQuery = await this.db.query(sqlString, [departmentId]);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
+
+      const departmentRolesQuery = sqlQuery as QueryResult<Role>,
+        departmentRole = departmentRolesQuery.rows;
+
+      return departmentRole;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getRole(roleId: string): Promise<Role> {
     try {
       const sqlString: string = "SELECT * FROM role WHERE id=$1",
@@ -112,8 +129,8 @@ export class RoleRepo implements RoleRepository {
       const sqlString = `
       SELECT
         r.id               AS "roleId",
-        r.role_name        AS "roleName",
-        r.role_description AS "roleDescription",
+        r.name             AS "roleName",
+        r.description      AS "roleDescription",
         COALESCE(
           JSON_AGG(
             JSON_BUILD_OBJECT(
@@ -129,7 +146,7 @@ export class RoleRepo implements RoleRepository {
       LEFT JOIN role_permissions rp ON rp.role_id = r.id
       LEFT JOIN permissions      p  ON p.id = rp.permission_id
       WHERE r.id = $1
-      GROUP BY r.id, r.role_name, r.role_description
+      GROUP BY r.id, r.name, r.description
     `,
         sqlQuery = await this.db.query(sqlString, [roleId]);
 

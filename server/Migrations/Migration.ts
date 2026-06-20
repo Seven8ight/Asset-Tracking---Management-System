@@ -3,7 +3,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Database } from "../Src/Config/Db.js";
 import { ErrorMsg, Info } from "../Src/Utilities/Logger.js";
-import { permissionServ, rolesService } from "../Src/Data Objects/DTO.js";
+import {
+  permissionServ,
+  rolePermissionServ,
+  rolesService,
+  userRolesServ,
+} from "../Src/Data Objects/DTO.js";
 
 const __filename = fileURLToPath(import.meta.url),
   __dirname = path.dirname(__filename);
@@ -175,11 +180,6 @@ const migrationTableCreation = async () => {
           group_name: "asset assignment",
           description: "Capability to assign self an asset for use",
         },
-        {
-          name: "",
-          group_name: "asset assignment",
-          description: "",
-        },
 
         //Audit
         {
@@ -210,7 +210,7 @@ const migrationTableCreation = async () => {
   createRoles = async () => {
     const roles: Record<string, any>[] = [
       {
-        name: "SaaS admin",
+        name: "SaaS Admin",
         description: "Capable of all actions in the system",
       },
       {
@@ -222,11 +222,11 @@ const migrationTableCreation = async () => {
         description: "Capable of managing assets within a department",
       },
       {
-        name: "Maintenance engineer",
+        name: "Maintenance Engineer",
         description: "Capable of declaring an asset repaired",
       },
       {
-        name: "Support staff",
+        name: "Support Staff",
         description:
           "Capable of consuming assets and reporting if assets are broken",
       },
@@ -239,6 +239,66 @@ const migrationTableCreation = async () => {
         name: role.name,
         description: role.description,
       });
+  },
+  assignRolePermissions = async () => {
+    const roles = await rolesService.getRoles(),
+      permissions = await permissionServ.getAllPermission();
+
+    const adminRole = roles.find((r) => r.name === "SaaS admin")!,
+      departmentManagerRole = roles.find(
+        (r) => r.name === "Department Manager",
+      )!,
+      assetManagerRole = roles.find((r) => r.name === "Asset Manager")!,
+      maintenanceEngineerRole = roles.find(
+        (r) => r.name === "Maintenance Engineer",
+      )!,
+      supportStaffRole = roles.find((r) => r.name === "Support staff")!;
+
+    for (const permission of permissions) {
+      const pName = permission.name,
+        pGroup = permission.group_name;
+
+      // --- SaaS Admin ---
+      // Has god-mode: Gets every single permission.
+      await rolePermissionServ.createRPermission(adminRole.id, permission.id);
+
+      // --- Department Manager ---
+      // Can do everything EXCEPT view "all logs" (they can only view departmental logs/individual logs)
+      if (pName !== "View all logs") {
+        await rolePermissionServ.createRPermission(
+          departmentManagerRole.id,
+          permission.id,
+        );
+      }
+
+      // --- Asset Manager ---
+      // Can manage "assets" and "individual asset" groups, but NOT assignments, audit, or department settings
+      if (pGroup === "assets" || pGroup === "individual asset") {
+        await rolePermissionServ.createRPermission(
+          assetManagerRole.id,
+          permission.id,
+        );
+      }
+
+      // --- Maintenance Engineer ---
+      // Strict requirement: Only allowed to declare an asset broken
+      if (pName === "Declare asset broken") {
+        await rolePermissionServ.createRPermission(
+          maintenanceEngineerRole.id,
+          permission.id,
+        );
+      }
+
+      // --- Support Staff ---
+      // Strict requirement: Only allowed to assign asset to self
+      if (pName === "Assign aset to self") {
+        // Note: Kept your original typo "aset" to match type
+        await rolePermissionServ.createRPermission(
+          supportStaffRole.id,
+          permission.id,
+        );
+      }
+    }
   };
 
 (async () => {
@@ -247,6 +307,7 @@ const migrationTableCreation = async () => {
     await migrationTables();
     await createRoles();
     await createPermissions();
+    await assignRolePermissions();
 
     Info("All migrations completed successfully");
     Info("Permissions inserted successfully");
