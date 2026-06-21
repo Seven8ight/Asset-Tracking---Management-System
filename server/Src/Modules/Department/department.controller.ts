@@ -7,6 +7,8 @@ import {
 import {
   DepartmentService,
   logsServ,
+  rolesService,
+  userRolesServ,
   userServ,
 } from "../../Data Objects/DTO.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
@@ -62,6 +64,13 @@ export const DepartmentController = async (
           );
 
         await userServ.assignUserToDepartment(user.userId, newDepartment.id);
+
+        const roles = await rolesService.getRoles(),
+          departmentRole = roles.find(
+            (role) => role.name.toLowerCase() == "saas admin",
+          );
+
+        await userRolesServ.createUserRole(user.userId, departmentRole!.id);
 
         await logsServ.createLog(newDepartment.id, user.userId, {
           entity_id: newDepartment.id,
