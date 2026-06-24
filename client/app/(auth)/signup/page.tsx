@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Logo from "../../components/ui/Logo";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
+import { authApi, saveTokens, decodeToken } from "../../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 
 function PasswordStrength({ password }: { password: string }) {
   if (!password) return null;
@@ -40,21 +42,28 @@ function PasswordStrength({ password }: { password: string }) {
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { setUser } = useAuth();
+
   const [form, setForm] = useState({
-    name: "", email: "", password: "", confirmPassword: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState<{ type: "error" | "success"; message: string } | null>(null);
+  const [apiError, setApiError] = useState("");
 
-  const setField = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
-  };
+  const setField = (field: string) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+      if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+      setApiError("");
+    };
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!form.name.trim()) errs.name = "Full name is required";
+    if (!form.username.trim()) errs.username = "Full name is required";
     if (!form.email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       errs.email = "Enter a valid email";
@@ -71,13 +80,36 @@ export default function SignUpPage() {
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setLoading(true);
-    // TODO: replace with real API call
-    // POST /api/auth/signup → returns user with role: "asset_manager"
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
+    setApiError("");
 
-    // After signup, asset manager must create their first department
-    router.push("/onboarding");
+    try {
+      // Your backend register expects: username, email, password
+      const response = await authApi.register({
+        username: form.username,
+        email: form.email,
+        password: form.password,
+      });
+
+      // Save tokens
+      saveTokens(response.accessToken, response.refreshToken);
+
+      // Decode to get user info and store in context
+      const decoded = decodeToken(response.accessToken);
+      setUser({
+        id: decoded.id,
+        department_id: decoded.department_id ?? null,
+        name: decoded.name,
+        email: decoded.email,
+        phone: decoded.phone,
+      });
+
+      // New user has no department yet — go create one
+      router.push("/onboarding");
+    } catch (err) {
+      setApiError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,21 +127,18 @@ export default function SignUpPage() {
         </p>
       </div>
 
-      {alert && (
-        <div className={`mb-5 p-3 rounded-md text-sm
-          ${alert.type === "error"
-            ? "bg-red-500/10 border border-red-500/20 text-red-300"
-            : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
-          }`}>
-          {alert.message}
+      {apiError && (
+        <div className="mb-5 p-3 rounded-md text-sm bg-red-500/10
+                        border border-red-500/20 text-red-300">
+          {apiError}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <Input
-          id="name" label="Full name" placeholder="Jane Mwangi"
-          value={form.name} onChange={setField("name")}
-          error={errors.name} required
+          id="username" label="Full name" placeholder="Jane Mwangi"
+          value={form.username} onChange={setField("username")}
+          error={errors.username} required
         />
         <Input
           id="email" label="Email address" type="email"
@@ -132,7 +161,6 @@ export default function SignUpPage() {
           value={form.confirmPassword} onChange={setField("confirmPassword")}
           error={errors.confirmPassword} required
         />
-
         <Button type="submit" fullWidth loading={loading}>
           Create account
         </Button>
