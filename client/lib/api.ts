@@ -119,3 +119,77 @@ export const userApi = {
 
   delete: () => apiFetch("/users", { method: "DELETE" }),
 };
+
+// ── Roles ─────────────────────────────────────────────────
+export const roleApi = {
+  getDepartmentRoles: () => apiFetch("/roles/department"),
+  getAll: () => apiFetch("/roles/all"),
+  getRoleWithPermissions: (roleId: string) =>
+    apiFetch(`/roles/permissions/${roleId}`),
+  create: (body: { name: string; description?: string }) =>
+    apiFetch("/roles", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: { name?: string; description?: string }) =>
+    apiFetch(`/roles/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  delete: (id: string) =>
+    apiFetch(`/roles/${id}`, { method: "DELETE" }),
+};
+
+// ── Permissions ───────────────────────────────────────────
+export const permissionApi = {
+  getAll: () => apiFetch("/permissions/all"),
+  getOne: (id: string) => apiFetch(`/permissions/${id}`),
+  create: (body: { name: string; description?: string }) =>
+    apiFetch("/permissions", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: { name?: string; description?: string }) =>
+    apiFetch(`/permissions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  delete: (id: string) =>
+    apiFetch(`/permissions/${id}`, { method: "DELETE" }),
+};
+
+// ── Role Permissions ──────────────────────────────────────
+export const rolePermissionApi = {
+  getRolePermissions: (roleId: string) =>
+    apiFetch(`/rolepermissions/${roleId}`),
+  assign: (role_id: string, permission_id: string) =>
+    apiFetch("/rolepermissions", {
+      method: "POST",
+      body: JSON.stringify({ role_id, permission_id }),
+    }),
+  remove: (roleId: string, permissionId: string) =>
+    apiFetch(`/rolepermissions/${roleId}/${permissionId}`, {
+      method: "DELETE",
+    }),
+};
+
+// ── User Roles ────────────────────────────────────────────
+export const userRoleApi = {
+  getMyRoles: () => apiFetch("/userroles"),
+  getMyRolesWithPermissions: () => apiFetch("/userroles/permissions"),
+  assign: (roleId: string) =>
+    apiFetch(`/userroles/${roleId}`, { method: "POST" }),
+  remove: (roleId: string) =>
+    apiFetch(`/userroles/${roleId}`, { method: "DELETE" }),
+};
+
+// ── Audit Logs ────────────────────────────────────────────
+export const auditApi = {
+  getDepartmentLogs: () => apiFetch("/audit/department"),
+  getAll: () => apiFetch("/audit/all"),
+  getOne: (id: string) => apiFetch(`/audit/${id}`),
+};
+
+// ── Assignments (asset ownership) ─────────────────────────
+export const assignmentApi = {
+  getDepartmentAssignments: () => apiFetch("/assignments/department"),
+  getOne: (id: string) => apiFetch(`/assignments/${id}`),
+  assign: (assetId: string) =>
+    apiFetch(`/assignments/${assetId}`, { method: "POST" }),
+  edit: (id: string, body: Record<string, any>) =>
+    apiFetch(`/assignments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+};
