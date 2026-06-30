@@ -22,8 +22,6 @@ type DepartmentOption = {
   color: string;
 };
 
-// Highest-ranked role wins when a user holds more than one. Anything not
-// listed here falls to the back, in whatever order the API returned it.
 const ROLE_PRIORITY = [
   "SaaS Admin",
   "Department Manager",
@@ -34,7 +32,6 @@ const ROLE_PRIORITY = [
 
 function getPrimaryRole(roles: string[]): string {
   if (roles.length === 0) return "Member";
-
   const ranked = [...roles].sort((a, b) => {
     const rankA = ROLE_PRIORITY.indexOf(a);
     const rankB = ROLE_PRIORITY.indexOf(b);
@@ -42,7 +39,6 @@ function getPrimaryRole(roles: string[]): string {
     const safeRankB = rankB === -1 ? ROLE_PRIORITY.length : rankB;
     return safeRankA - safeRankB;
   });
-
   return ranked[0];
 }
 
@@ -110,9 +106,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router]);
 
-  // Resolve which department's name to show in the sidebar badge:
-  // an admin who has switched views the selected department, everyone
-  // else just sees their own.
+  // Load department name for the current target (own or switched)
   useEffect(() => {
     let mounted = true;
     const targetDepartmentId = viewingDepartmentId || user?.department_id;
@@ -122,11 +116,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         if (mounted) setDepartmentName("");
         return;
       }
-
       try {
         const response = await departmentApi.getOne(targetDepartmentId);
         const department = response?.response?.message;
-
         if (mounted) {
           setDepartmentName(department?.name ?? "Your Department");
         }
@@ -136,7 +128,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     };
 
     loadDepartment();
-
     return () => {
       mounted = false;
     };
@@ -153,17 +144,14 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading || !user) return;
-
     const allowedPaths = new Set(navItems.map((item) => item.href));
-
     if (allowedPaths.has(pathname)) return;
-
     const fallbackRoute = navItems[0]?.href ?? "/dashboard";
     if (pathname !== fallbackRoute) router.replace(fallbackRoute);
   }, [loading, user, pathname, navItems, router]);
 
   const openSwitcher = async () => {
-    if (!isSaasAdmin) return; // hard guard, in case button somehow renders
+    if (!isSaasAdmin) return;
     setShowSwitcher(true);
     setSwitcherLoading(true);
     setSwitcherError("");
@@ -179,7 +167,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   };
 
   const selectDepartment = (id: string | null) => {
-    if (!isSaasAdmin) return; // hard guard
+    if (!isSaasAdmin) return;
     setViewingDepartmentId(id);
     setShowSwitcher(false);
   };
@@ -188,16 +176,21 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
-        <div
-          className="w-6 h-6 border-2 border-indigo-500 border-t-transparent
-                        rounded-full animate-spin"
-        />
+        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  // Get department name to display
-  const targetDepartmentId = viewingDepartmentId || user.department_id;
+  // Compute whether we are viewing the user's own department
+  const userDeptId = user.department_id || null;
+  const targetDepartmentId = viewingDepartmentId || userDeptId;
+  const isViewingMyDepartment =
+    !!userDeptId &&
+    (viewingDepartmentId === null ||
+      viewingDepartmentId === undefined ||
+      viewingDepartmentId === userDeptId);
+
+  // Badge labels
   const deptLabel = targetDepartmentId
     ? departmentName || "Loading department..."
     : "No department";
@@ -211,12 +204,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         {/* Sidebar */}
         <aside
           className={`
-        fixed inset-y-0 left-0 z-50 w-64 flex flex-col
-        bg-[#1E293B] border-r border-white/5
-        transform transition-transform duration-200
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:relative lg:translate-x-0
-      `}
+            fixed inset-y-0 left-0 z-50 w-64 flex flex-col
+            bg-[#1E293B] border-r border-white/5
+            transform transition-transform duration-200
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+            lg:relative lg:translate-x-0
+          `}
         >
           {/* Logo */}
           <div className="h-16 flex items-center px-5 border-b border-white/5 shrink-0">
@@ -228,7 +221,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             <div className="px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/15">
               <div className="flex items-center justify-between gap-2 mb-0.5">
                 <p className="text-xs text-slate-500">
-                  {viewingDepartmentId ? "Viewing department" : "Department"}
+                  {isViewingMyDepartment ? "Department" : "Viewing department"}
                 </p>
                 {isSaasAdmin && (
                   <button
@@ -242,7 +235,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
               <p className="text-sm font-medium text-indigo-300 truncate">
                 {deptLabel}
               </p>
-              {isSaasAdmin && viewingDepartmentId && (
+              {isSaasAdmin && !isViewingMyDepartment && (
                 <button
                   onClick={() => selectDepartment(null)}
                   className="text-xs text-slate-500 hover:text-slate-300 transition-colors mt-1"
@@ -263,14 +256,14 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
-                  font-medium transition-colors
-                  ${
-                    active
-                      ? "bg-indigo-500/15 text-indigo-300"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-                  }
-                `}
+                    flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
+                    font-medium transition-colors
+                    ${
+                      active
+                        ? "bg-indigo-500/15 text-indigo-300"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                    }
+                  `}
                 >
                   <span className="text-base w-5 text-center">{item.icon}</span>
                   <span className="flex-1">{item.label}</span>
@@ -293,7 +286,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                {/* Real name from JWT */}
                 <p className="text-sm font-medium text-slate-200 truncate">
                   {user.name}
                 </p>
@@ -341,7 +333,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
               <p className="text-sm font-semibold text-slate-200 capitalize">
                 {pathname.replace("/", "").replace("-", " ") || "Dashboard"}
               </p>
-              {/* Real user name and role */}
               <p className="text-xs text-slate-500 hidden sm:block">
                 {user.name} · {roleLabel}
               </p>
@@ -394,7 +385,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                 onClick={() => selectDepartment(null)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors
                   ${
-                    !viewingDepartmentId
+                    isViewingMyDepartment
                       ? "bg-indigo-500/15 text-indigo-300"
                       : "text-slate-300 hover:bg-white/5"
                   }`}

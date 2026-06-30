@@ -15,13 +15,13 @@ type ApiResponse<T> = {
   };
 };
 
-type UnitStatus = "available" | "in-use" | "under-repair" | "broken";
+type UnitStatus = "available" | "in-use" | "Repaired" | "broken";
 
 const getUnitStatus = (item: BackendIndividualAsset): UnitStatus => {
   const assigned = (item.assigned || "").toLowerCase().trim();
 
   if (item.is_broken || assigned === "broken") return "broken";
-  if (item.is_repaired || assigned === "repaired") return "under-repair";
+  if (item.is_repaired || assigned === "repaired") return "Repaired";
   if (assigned === "in use") return "in-use";
   return "available";
 };
@@ -94,14 +94,14 @@ export default function DashboardPage() {
   const statsByUnits = useMemo(() => {
     let available = 0;
     let inUse = 0;
-    let underRepair = 0;
+    let repaired = 0;
     let broken = 0;
 
     allUnits.forEach((item) => {
       const status = getUnitStatus(item);
       if (status === "available") available += 1;
       if (status === "in-use") inUse += 1;
-      if (status === "under-repair") underRepair += 1;
+      if (status === "Repaired") repaired += 1;
       if (status === "broken") broken += 1;
     });
 
@@ -109,7 +109,7 @@ export default function DashboardPage() {
       total: allUnits.length,
       available,
       inUse,
-      underRepair,
+      underRepair: repaired,
       broken,
     };
   }, [allUnits]);
@@ -117,14 +117,14 @@ export default function DashboardPage() {
   const total = statsByUnits.total;
   const available = statsByUnits.available;
   const inUse = statsByUnits.inUse;
-  const underRepair = statsByUnits.underRepair;
+  const repaired = statsByUnits.underRepair;
   const broken = statsByUnits.broken;
 
   const stats = [
     { label: "Total Units", value: total, icon: "📦" },
     { label: "Available", value: available, icon: "✅" },
     { label: "In Use", value: inUse, icon: "🔄" },
-    { label: "Under Repair", value: underRepair, icon: "🔧" },
+    { label: "Repaired", value: repaired, icon: "🔧" },
   ];
 
   const firstName = user?.name?.split(" ")[0] ?? "there";
@@ -227,7 +227,7 @@ export default function DashboardPage() {
               {[
                 { label: "Available", count: available, color: "#34D399" },
                 { label: "In Use", count: inUse, color: "#6366F1" },
-                { label: "Under Repair", count: underRepair, color: "#F59E0B" },
+                { label: "Repaired", count: repaired, color: "#F59E0B" },
                 { label: "Broken", count: broken, color: "#F87171" },
               ].map((s) => (
                 <div key={s.label}>

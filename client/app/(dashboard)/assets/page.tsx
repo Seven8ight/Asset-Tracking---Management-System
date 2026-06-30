@@ -33,7 +33,7 @@ type AssignmentRecord = {
 const STATUS_STYLES: Record<UiStatus, string> = {
   Available: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
   "In Use": "bg-indigo-500/15 text-indigo-400 border-indigo-500/20",
-  "Under repair": "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  Repaired: "bg-amber-500/15 text-amber-400 border-amber-500/20",
   Broken: "bg-red-500/15 text-red-400 border-red-500/20",
 };
 
@@ -265,7 +265,7 @@ export default function AssetsPage() {
 
   const getIndividualLabel = (item: BackendIndividualAsset) => {
     if (item.is_broken) return "Broken";
-    if (item.is_repaired) return "Under Repair";
+    if (item.is_repaired) return "Repaired";
     const assigned = (item.assigned || "").toLowerCase();
     if (assigned === "in use") return "In Use";
     return "Available";
@@ -700,8 +700,7 @@ export default function AssetsPage() {
                                     item,
                                     currentAssignment,
                                   );
-                                  const canDeclareBroken =
-                                    !item.is_broken && !item.is_repaired;
+                                  const canDeclareBroken = !item.is_broken;
                                   const canDeclareRepaired = item.is_broken;
 
                                   return (

@@ -1,4 +1,4 @@
-export type UiStatus = "Available" | "In Use" | "Under repair" | "Broken";
+export type UiStatus = "Available" | "In Use" | "Repaired" | "Broken";
 
 export type BackendAsset = {
   id: string;
@@ -48,7 +48,7 @@ export const deriveUiStatus = (items: BackendIndividualAsset[]): UiStatus => {
       item.is_repaired || normalizeAssigned(item.assigned) === "repaired",
   );
 
-  if (hasRepairing) return "Under repair";
+  if (hasRepairing) return "Repaired";
 
   const hasInUse = items.some(
     (item) => normalizeAssigned(item.assigned) === "in use",
