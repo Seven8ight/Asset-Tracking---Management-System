@@ -7,14 +7,17 @@ import {
 import { SERVER_PORT } from "./Src/Config/Env.js";
 import { Info } from "./Src/Utilities/Logger.js";
 import { Router } from "./Router.js";
+import { SocketIO } from "./Src/Modules/Socket/socket.service.js";
 
 const httpServer: Server<typeof IncomingMessage, typeof ServerResponse> =
-  createServer(
-    (request: IncomingMessage, response: ServerResponse<IncomingMessage>) =>
-      Router(request, response),
-  );
+    createServer(
+      (request: IncomingMessage, response: ServerResponse<IncomingMessage>) =>
+        Router(request, response),
+    ),
+  ioServer = new SocketIO(httpServer);
 
 httpServer.listen(SERVER_PORT, () => {
+  ioServer.establishConnection();
   Info(`Server is up and running at port, ${SERVER_PORT}`);
 });
 

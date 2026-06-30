@@ -16,7 +16,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     const socketInstance = io(ServerAPI, {
       withCredentials: true,
       auth: {
-        token: user.user?.id,
+        token: user.accessToken,
       },
     });
 

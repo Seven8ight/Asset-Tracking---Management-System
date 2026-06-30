@@ -72,7 +72,7 @@ const ROLE_STYLES: Record<string, string> = {
 };
 
 export default function StaffPage() {
-  const { user, permissions, hasPermission } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<StaffMember | null>(null);

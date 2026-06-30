@@ -26,20 +26,20 @@ export const AssignmentsController = async (
         let requestBody: any;
 
         if (getPathname == "department") {
-          await PermissionChecker(
-            request,
-            "asset assignment",
-            "View departmental assignments",
-          );
+          // await PermissionChecker(
+          //   request,
+          //   "asset assignment",
+          //   "View departmental assignments",
+          // );
           requestBody = await service.getDepartmentAssignments(
             user.departmentId,
           );
         } else {
-          await PermissionChecker(
-            request,
-            "asset assignment",
-            "View an assignment",
-          );
+          // await PermissionChecker(
+          //   request,
+          //   "asset assignment",
+          //   "View an assignment",
+          // );
           requestBody = await service.getAssignments(getPathname);
         }
 

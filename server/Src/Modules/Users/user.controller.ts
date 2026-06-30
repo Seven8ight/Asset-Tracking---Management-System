@@ -27,7 +27,7 @@ export const UserController = async (
 
     switch (request.method) {
       case "GET":
-        await PermissionChecker(request, "users", "Manage user roles");
+        // await PermissionChecker(request, "users", "Manage user roles");
         const specifiedUser = PathnameValidator(pathnames);
 
         const userRetrieved = await service.getUser(specifiedUser);

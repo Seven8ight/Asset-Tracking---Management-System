@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { assetApi, assignmentsApi, individualAssetApi } from "../../../lib/api";
 import { useAuth } from "@/app/_lib/context/AuthContext";
 import {
@@ -30,12 +30,31 @@ type AssignmentRecord = {
   returned_at: string | null;
 };
 
+type ToastNotification = {
+  id: string;
+  message: string;
+};
+
 const STATUS_STYLES: Record<UiStatus, string> = {
   Available: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
   "In Use": "bg-indigo-500/15 text-indigo-400 border-indigo-500/20",
   Repaired: "bg-amber-500/15 text-amber-400 border-amber-500/20",
   Broken: "bg-red-500/15 text-red-400 border-red-500/20",
 };
+
+// Used for the per-asset status count "bubbles" in the table — distinct from
+// STATUS_STYLES above since In Use is greyed out here per the requested key:
+// green = Available, grey = In Use, yellow = Repaired, red = Broken.
+const STATUS_COUNT_STYLES: Record<UiStatus, string> = {
+  Available: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  "In Use": "bg-slate-500/15 text-slate-400 border-slate-500/30",
+  Repaired: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  Broken: "bg-red-500/15 text-red-400 border-red-500/30",
+};
+
+const STATUS_ORDER: UiStatus[] = ["Available", "In Use", "Repaired", "Broken"];
+
+const TOAST_DURATION_MS = 4000;
 
 export default function AssetsPage() {
   const { user, hasPermission } = useAuth();
@@ -54,6 +73,47 @@ export default function AssetsPage() {
   >({});
   const socket = useSocketContext();
 
+  // Bumping this re-runs the asset/assignment fetch — used both for our own
+  // mutations and whenever a socket event tells us something changed.
+  const [change, setChange] = useState(0);
+
+  // Live notification toasts, newest last. Each auto-dismisses itself.
+  const [notifications, setNotifications] = useState<ToastNotification[]>([]);
+  const dismissTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
+
+  const pushNotification = useCallback((message: string) => {
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()}`;
+
+    setNotifications((prev) => [...prev, { id, message }]);
+
+    dismissTimers.current[id] = setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      delete dismissTimers.current[id];
+    }, TOAST_DURATION_MS);
+  }, []);
+
+  const dismissNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (dismissTimers.current[id]) {
+      clearTimeout(dismissTimers.current[id]);
+      delete dismissTimers.current[id];
+    }
+  };
+
+  // Clear any pending timers on unmount so they don't fire against a
+  // detached component.
+  useEffect(() => {
+    return () => {
+      Object.values(dismissTimers.current).forEach(clearTimeout);
+      dismissTimers.current = {};
+    };
+  }, []);
+
   // Keyed by individual asset id (asset_id from AssignmentRecord)
   const [activeAssignmentsByIndividual, setActiveAssignmentsByIndividual] =
     useState<Record<string, AssignmentRecord>>({});
@@ -71,12 +131,42 @@ export default function AssetsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!socket) console.log("Socket not established");
-    socket?.on("connect", () =>
+    if (!socket) {
+      console.log("Socket not established");
+      return;
+    }
+
+    socket.on("connect", () =>
       console.log(`Connection established: ${socket.id}`),
     );
+
+    // NOTE: the backend's "broken asset" and "repaired asset" handlers
+    // currently emit the "ownership change" event under the hood (not
+    // "broken asset" / "repaired asset"), so all three kinds of updates
+    // arrive here. We surface whatever message the server sends and bump
+    // `change` to force a re-fetch of assets + assignments.
+    const handleRealtimeUpdate = (payload: { message?: string } | string) => {
+      const message = typeof payload === "string" ? payload : payload?.message;
+
+      if (message) pushNotification(message);
+      setChange((c) => c + 1);
+    };
+
+    socket.on("ownership change", handleRealtimeUpdate);
+    // Kept registered in case the backend is updated to emit these
+    // event names directly instead of routing everything through
+    // "ownership change" — harmless no-op until then.
+    socket.on("broken asset", handleRealtimeUpdate);
+    socket.on("repaired asset", handleRealtimeUpdate);
+
     fetchAssets();
-  }, [user]);
+
+    return () => {
+      socket.off("ownership change", handleRealtimeUpdate);
+      socket.off("broken asset", handleRealtimeUpdate);
+      socket.off("repaired asset", handleRealtimeUpdate);
+    };
+  }, [user, change, socket, pushNotification]);
 
   const fetchAssets = async () => {
     try {
@@ -271,6 +361,23 @@ export default function AssetsPage() {
     return "Available";
   };
 
+  const getStatusCounts = (assetId: string): Record<UiStatus, number> => {
+    const items = individualByAsset[assetId] ?? [];
+    const counts: Record<UiStatus, number> = {
+      Available: 0,
+      "In Use": 0,
+      Repaired: 0,
+      Broken: 0,
+    };
+
+    items.forEach((item) => {
+      const label = getIndividualLabel(item) as UiStatus;
+      counts[label] += 1;
+    });
+
+    return counts;
+  };
+
   const canAssignSelf = (item: BackendIndividualAsset) => {
     const assigned = (item.assigned || "").toLowerCase();
     if (item.is_broken) return false;
@@ -354,6 +461,12 @@ export default function AssetsPage() {
             createdAssignment?.assigned_at ?? new Date().toISOString(),
         },
       }));
+
+      if (!socket) return;
+      socket.emit("ownership change", user?.department_id, {
+        individualAssetId: individualAsset.id,
+        status: "taken",
+      });
     } catch (err) {
       setApiError((err as Error).message || "Failed to assign asset");
     } finally {
@@ -400,6 +513,12 @@ export default function AssetsPage() {
         delete next[individualAsset.id];
         return next;
       });
+
+      if (!socket) return;
+      socket.emit("ownership change", user?.department_id, {
+        individualAssetId: individualAsset.id,
+        status: "returned",
+      });
     } catch (err) {
       setApiError((err as Error).message || "Failed to return asset");
     } finally {
@@ -432,6 +551,9 @@ export default function AssetsPage() {
         is_repaired: false,
         assigned: "broken",
       }));
+
+      if (!socket) return;
+      socket.emit("broken asset", user?.department_id, individualAsset.id);
     } catch (err) {
       setApiError((err as Error).message || "Failed to declare asset broken");
     } finally {
@@ -469,6 +591,9 @@ export default function AssetsPage() {
     } finally {
       setAssigningId(null);
     }
+
+    if (!socket) return;
+    socket.emit("repaired asset", user?.department_id, individualAsset.id);
   };
 
   const filtered = assets.filter((a) => {
@@ -479,6 +604,27 @@ export default function AssetsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Live notification toasts */}
+      <div className="fixed top-4 right-4 z-[70] flex flex-col gap-2 w-full max-w-sm pointer-events-none">
+        {notifications.map((n) => (
+          <div
+            key={n.id}
+            className="pointer-events-auto flex items-start gap-3 rounded-lg
+                       border border-indigo-500/20 bg-[#1E293B] px-4 py-3
+                       shadow-lg shadow-black/20 animate-[fadeIn_0.15s_ease]"
+          >
+            <span className="text-indigo-400 text-sm mt-0.5">●</span>
+            <p className="flex-1 text-sm text-slate-200">{n.message}</p>
+            <button
+              onClick={() => dismissNotification(n.id)}
+              className="text-slate-500 hover:text-slate-300 transition-colors text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
@@ -576,6 +722,20 @@ export default function AssetsPage() {
         </div>
       )}
 
+      {/* Status key */}
+      {assets.length > 0 && (
+        <div className="flex items-center gap-4 flex-wrap text-xs text-slate-400">
+          {STATUS_ORDER.map((status) => (
+            <div key={status} className="flex items-center gap-1.5">
+              <span
+                className={`w-3 h-3 rounded-full border ${STATUS_COUNT_STYLES[status]}`}
+              />
+              {status}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Table */}
       {!loading && assets.length > 0 && (
         <div className="rounded-xl bg-[#1E293B] border border-white/5 overflow-x-auto">
@@ -628,12 +788,21 @@ export default function AssetsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium border
-                      ${STATUS_STYLES[asset.status] ?? "bg-slate-500/15 text-slate-400 border-slate-500/20"}`}
-                      >
-                        {asset.status}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {STATUS_ORDER.filter(
+                          (status) => getStatusCounts(asset.id)[status] > 0,
+                        ).map((status) => (
+                          <span
+                            key={status}
+                            title={status}
+                            className={`flex items-center justify-center min-w-6 h-6 px-1.5
+                                        rounded-full text-xs font-semibold border
+                                        ${STATUS_COUNT_STYLES[status]}`}
+                          >
+                            {getStatusCounts(asset.id)[status]}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-center text-slate-300">
                       {asset.quantity}

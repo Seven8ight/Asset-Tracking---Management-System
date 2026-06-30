@@ -311,19 +311,25 @@ export default function RolesPage() {
                   <span className="text-xs rounded-full border border-white/10 bg-white/5 px-2 py-1 text-slate-400">
                     {role.scope}
                   </span>
-                  <button
-                    onClick={() => openEditModal(role)}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteRole(role)}
-                    disabled={deletingRoleId === role.id}
-                    className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors disabled:opacity-50"
-                  >
-                    {deletingRoleId === role.id ? "Deleting..." : "Delete"}
-                  </button>
+                  {role.scope == "Department" ? (
+                    <>
+                      <button
+                        onClick={() => openEditModal(role)}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteRole(role)}
+                        disabled={deletingRoleId === role.id}
+                        className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors disabled:opacity-50"
+                      >
+                        {deletingRoleId === role.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </>
+                  ) : (
+                    <></>
+                  )}
                 </div>
               </div>
 

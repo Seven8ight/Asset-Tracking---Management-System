@@ -24,12 +24,11 @@ export class SocketIO implements SocketIOService {
         try {
           const token = socket.handshake.auth?.token as string | undefined;
 
-          if (!token) {
-            return next();
-            // return next(new Error("Auth token not provided"));
-          }
+          if (!token) return next();
+          // return next(new Error("Auth token not provided"));
 
           const user = decode_access_token(token!);
+
           if (!(user as PublicUser).id)
             return next(new Error("Invalid auth token provided"));
 
@@ -47,7 +46,7 @@ export class SocketIO implements SocketIOService {
       connectTimeout: 4000,
       cors: {
         methods: ["POST", "GET", "PUT", "PATCH", "OPTIONS", "DELETE"],
-        origin: "http://localhost:3001",
+        origin: "http://localhost:3000",
         credentials: true,
       },
     });
@@ -94,7 +93,7 @@ export class SocketIO implements SocketIOService {
             actualAsset = await assetService.getAsset(individualAsset.asset_id),
             reporter = await userServ.getUser(id);
 
-          this.ioServer.to(`Rooms:${departmentId}`).emit("ownership change", {
+          this.ioServer.to(`Rooms:${departmentId}`).emit("broken asset", {
             message: `${reporter.username} has reported a ${actualAsset.name} is broken`,
           });
         },
@@ -108,7 +107,7 @@ export class SocketIO implements SocketIOService {
             actualAsset = await assetService.getAsset(individualAsset.asset_id),
             reporter = await userServ.getUser(id);
 
-          this.ioServer.to(`Rooms:${departmentId}`).emit("ownership change", {
+          this.ioServer.to(`Rooms:${departmentId}`).emit("repaired asset", {
             message: `${reporter.username} has declared ${actualAsset.name} to be fixed`,
           });
         },
