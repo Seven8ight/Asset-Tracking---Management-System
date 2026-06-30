@@ -1,178 +1,193 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { auditApi } from "../../../lib/api";
+import { useEffect, useState } from "react";
+import { auditApi } from "@/lib/api";
 
-interface AuditLog {
+type AuditLog = {
   id: string;
   user_id: string;
+  username?: string;
+  department_id: string;
   action: string;
   entity_type: string;
   entity_id: string;
-  old_values: Record<string, any>;
-  new_values: Record<string, any>;
+  old_values: Record<string, unknown>;
+  new_values: Record<string, unknown>;
   created_at: string;
-}
-
-const ACTION_STYLES: Record<string, string> = {
-  "Creating": "bg-emerald-500/10 text-emerald-400",
-  "Editing": "bg-indigo-500/10 text-indigo-400",
-  "Deleting": "bg-red-500/10 text-red-400",
-  "Asset assignment": "bg-amber-500/10 text-amber-400",
 };
 
-const getActionStyle = (action: string) => {
-  const key = Object.keys(ACTION_STYLES).find((k) =>
-    action.toLowerCase().includes(k.toLowerCase())
-  );
-  return key ? ACTION_STYLES[key] : "bg-slate-500/10 text-slate-400";
+type ApiResponse<T> = {
+  response?: {
+    message?: T;
+  };
 };
+
+type UiLog = {
+  id: string;
+  user: string;
+  action: string;
+  target: string;
+  time: string;
+  type: "create" | "update" | "warning" | "delete";
+};
+
+const TYPE_STYLES: Record<string, string> = {
+  create: "bg-emerald-500/10 text-emerald-400",
+  update: "bg-indigo-500/10 text-indigo-400",
+  warning: "bg-amber-500/10 text-amber-400",
+  delete: "bg-red-500/10 text-red-400",
+};
+
+const inferType = (action: string): UiLog["type"] => {
+  const normalized = action.toLowerCase();
+
+  if (normalized.includes("delet")) return "delete";
+  if (normalized.includes("repair") || normalized.includes("broken"))
+    return "warning";
+  if (normalized.includes("creat") || normalized.includes("invitation"))
+    return "create";
+
+  return "update";
+};
+
+const formatTarget = (log: AuditLog): string => {
+  const newValues = log.new_values || {};
+  const oldValues = log.old_values || {};
+
+  const label =
+    (newValues["name"] as string | undefined) ||
+    (newValues["username"] as string | undefined) ||
+    (oldValues["name"] as string | undefined) ||
+    (oldValues["username"] as string | undefined) ||
+    log.entity_id;
+
+  return `${log.entity_type} · ${label}`;
+};
+
+const toUiLog = (log: AuditLog): UiLog => ({
+  id: log.id,
+  user: log.username?.trim() || `User ${log.user_id.slice(0, 8)}`,
+  action: log.action,
+  target: formatTarget(log),
+  time: new Date(log.created_at).toLocaleString(),
+  type: inferType(log.action),
+});
 
 export default function AuditLogsPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<UiLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchLogs = async () => {
+    let mounted = true;
+
+    const loadLogs = async () => {
       try {
-        const data = await auditApi.getDepartmentLogs();
-        setLogs(Array.isArray(data) ? data : []);
+        setLoading(true);
+        const response = (await auditApi.getDepartmentLogs()) as ApiResponse<
+          AuditLog[]
+        >;
+        const rawLogs = response?.response?.message ?? [];
+
+        if (!mounted) return;
+
+        setLogs(Array.isArray(rawLogs) ? rawLogs.map(toUiLog) : []);
+        setError("");
       } catch (err) {
-        setApiError((err as Error).message);
+        if (!mounted) return;
+        setLogs([]);
+        setError((err as Error).message || "Failed to load audit logs");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
-    fetchLogs();
+
+    loadLogs();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
     <div className="flex flex-col gap-6">
-
       <div>
         <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
           Audit Logs
         </h1>
         <p className="text-sm text-slate-400 mt-1">
-          A full history of every action taken in this department.
+          A full history of every action taken in the system.
         </p>
       </div>
 
-      {apiError && (
-        <div className="p-3 rounded-md text-sm bg-red-500/10 border
-                        border-red-500/20 text-red-300">
-          {apiError}
+      {error && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {error}
         </div>
       )}
 
-      {loading && (
-        <div className="flex flex-col gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-14 rounded-xl bg-[#1E293B] animate-pulse" />
-          ))}
-        </div>
-      )}
-
-      {!loading && logs.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24
-                        rounded-xl bg-[#1E293B] border border-dashed border-white/10">
-          <div className="text-5xl mb-4">📋</div>
-          <h3 className="text-lg font-semibold text-slate-200 mb-2">No logs yet</h3>
-          <p className="text-sm text-slate-400 text-center max-w-xs">
-            Actions taken in this department will appear here automatically.
-          </p>
-        </div>
-      )}
-
-      {!loading && logs.length > 0 && (
-        <div className="rounded-xl bg-[#1E293B] border border-white/5 overflow-hidden">
-          <table className="w-full text-sm min-w-[600px]">
-            <thead>
-              <tr className="border-b border-white/5">
-                {["Action", "Entity", "Type", "When", "Details"].map((h) => (
-                  <th key={h}
-                    className="text-left px-4 py-3 text-xs font-semibold
-                               text-slate-400 uppercase tracking-wider">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <>
-                  <tr key={log.id}
-                    className="border-b border-white/5 last:border-0
-                               hover:bg-white/2 transition-colors cursor-pointer"
-                    onClick={() =>
-                      setExpanded(expanded === log.id ? null : log.id)
-                    }>
-                    <td className="px-4 py-3 text-slate-300 font-medium">
-                      {log.action}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs font-mono">
-                      {log.entity_id.slice(0, 8)}…
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium
-                        ${getActionStyle(log.action)}`}>
-                        {log.entity_type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs text-indigo-400 hover:text-indigo-300">
-                        {expanded === log.id ? "Hide ▲" : "Show ▼"}
-                      </span>
-                    </td>
-                  </tr>
-
-                  {/* Expanded row showing old/new values */}
-                  {expanded === log.id && (
-                    <tr key={`${log.id}-expanded`}
-                      className="border-b border-white/5 bg-slate-900/30">
-                      <td colSpan={5} className="px-4 py-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs font-semibold text-slate-500
-                                          uppercase tracking-wider mb-2">
-                              Before
-                            </p>
-                            <pre className="text-xs text-slate-400 bg-[#0F172A]
-                                           rounded-lg p-3 overflow-x-auto">
-                              {Object.keys(log.old_values).length === 0
-                                ? "—"
-                                : JSON.stringify(log.old_values, null, 2)
-                              }
-                            </pre>
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-slate-500
-                                          uppercase tracking-wider mb-2">
-                              After
-                            </p>
-                            <pre className="text-xs text-slate-400 bg-[#0F172A]
-                                           rounded-lg p-3 overflow-x-auto">
-                              {Object.keys(log.new_values).length === 0
-                                ? "—"
-                                : JSON.stringify(log.new_values, null, 2)
-                              }
-                            </pre>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </>
+      <div className="rounded-xl bg-[#1E293B] border border-white/5 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/5">
+              {["User", "Action", "Target", "Type", "Time"].map((h) => (
+                <th
+                  key={h}
+                  className="text-left px-4 py-3 text-xs font-semibold 
+                             text-slate-400 uppercase tracking-wider"
+                >
+                  {h}
+                </th>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td className="px-4 py-5 text-slate-400 text-sm" colSpan={5}>
+                  Loading audit logs...
+                </td>
+              </tr>
+            )}
+
+            {!loading && logs.length === 0 && (
+              <tr>
+                <td className="px-4 py-5 text-slate-400 text-sm" colSpan={5}>
+                  No audit logs yet.
+                </td>
+              </tr>
+            )}
+
+            {!loading &&
+              logs.map((log) => (
+                <tr
+                  key={log.id}
+                  className="border-b border-white/5 last:border-0 
+                           hover:bg-white/2 transition-colors"
+                >
+                  <td className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
+                    {log.user}
+                  </td>
+                  <td className="px-4 py-3 text-slate-400">{log.action}</td>
+                  <td className="px-4 py-3 text-slate-500 text-xs">
+                    {log.target}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize
+                    ${TYPE_STYLES[log.type]}`}
+                    >
+                      {log.type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                    {log.time}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

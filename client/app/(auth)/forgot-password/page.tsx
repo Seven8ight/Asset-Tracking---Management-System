@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Logo from "../../components/ui/Logo";
-import Input from "../../components/ui/Input";
-import Button from "../../components/ui/Button";
+import Logo from "../../_lib/ui/Logo";
+import Input from "../../_lib/ui/Input";
+import Button from "../../_lib/ui/Button";
 
 type Step = "email" | "code" | "reset" | "done";
 
@@ -22,9 +22,13 @@ export default function ForgotPasswordPage() {
   // Step 1 — send reset email
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) { setEmailError("Email is required"); return; }
+    if (!email.trim()) {
+      setEmailError("Email is required");
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError("Enter a valid email"); return;
+      setEmailError("Enter a valid email");
+      return;
     }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
@@ -54,13 +58,17 @@ export default function ForgotPasswordPage() {
 
   const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.join("").length < 6) { setCodeError("Enter the full 6-digit code"); return; }
+    if (code.join("").length < 6) {
+      setCodeError("Enter the full 6-digit code");
+      return;
+    }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 900));
     setLoading(false);
     // TODO: validate code against your API
     if (code.join("") !== "123456") {
-      setCodeError("Invalid code. Try again."); return;
+      setCodeError("Invalid code. Try again.");
+      return;
     }
     setStep("reset");
   };
@@ -70,9 +78,14 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (!newPassword) errs.newPassword = "Password is required";
-    else if (newPassword.length < 8) errs.newPassword = "Must be at least 8 characters";
-    if (newPassword !== confirmPassword) errs.confirmPassword = "Passwords do not match";
-    if (Object.keys(errs).length) { setPassErrors(errs); return; }
+    else if (newPassword.length < 8)
+      errs.newPassword = "Must be at least 8 characters";
+    if (newPassword !== confirmPassword)
+      errs.confirmPassword = "Passwords do not match";
+    if (Object.keys(errs).length) {
+      setPassErrors(errs);
+      return;
+    }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
     setLoading(false);
@@ -80,8 +93,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="w-full max-w-md" style={{ animation: "fadeUp 0.4s ease both" }}>
-
+    <div
+      className="w-full max-w-md"
+      style={{ animation: "fadeUp 0.4s ease both" }}
+    >
       <div className="flex justify-center mb-8 lg:hidden">
         <Logo size="md" />
       </div>
@@ -89,9 +104,11 @@ export default function ForgotPasswordPage() {
       {/* ── Step: Email ── */}
       {step === "email" && (
         <div>
-          <Link href="/login"
+          <Link
+            href="/login"
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 
-                       hover:text-slate-300 mb-8 transition-colors">
+                       hover:text-slate-300 mb-8 transition-colors"
+          >
             ← Back to sign in
           </Link>
           <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-2">
@@ -102,11 +119,17 @@ export default function ForgotPasswordPage() {
           </p>
           <form onSubmit={handleEmailSubmit} className="flex flex-col gap-5">
             <Input
-              id="reset-email" label="Email address" type="email"
+              id="reset-email"
+              label="Email address"
+              type="email"
               placeholder="you@strathmore.edu"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
-              error={emailError} required
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError("");
+              }}
+              error={emailError}
+              required
             />
             <Button type="submit" fullWidth loading={loading}>
               Send reset code
@@ -118,9 +141,11 @@ export default function ForgotPasswordPage() {
       {/* ── Step: OTP Code ── */}
       {step === "code" && (
         <div>
-          <button onClick={() => setStep("email")}
+          <button
+            onClick={() => setStep("email")}
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 
-                       hover:text-slate-300 mb-8 transition-colors bg-transparent border-none cursor-pointer">
+                       hover:text-slate-300 mb-8 transition-colors bg-transparent border-none cursor-pointer"
+          >
             ← Back
           </button>
           <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-2">
@@ -156,7 +181,9 @@ export default function ForgotPasswordPage() {
                 ))}
               </div>
               {codeError && (
-                <p className="text-xs text-red-400 text-center mt-2">{codeError}</p>
+                <p className="text-xs text-red-400 text-center mt-2">
+                  {codeError}
+                </p>
               )}
               {/* Demo hint */}
               <p className="text-xs text-amber-400/70 text-center mt-3">
@@ -191,18 +218,30 @@ export default function ForgotPasswordPage() {
           </p>
           <form onSubmit={handleResetSubmit} className="flex flex-col gap-5">
             <Input
-              id="new-password" label="New password" type="password"
+              id="new-password"
+              label="New password"
+              type="password"
               placeholder="Create a strong password"
               value={newPassword}
-              onChange={(e) => { setNewPassword(e.target.value); setPassErrors({}); }}
-              error={passErrors.newPassword} required
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                setPassErrors({});
+              }}
+              error={passErrors.newPassword}
+              required
             />
             <Input
-              id="confirm-password" label="Confirm new password" type="password"
+              id="confirm-password"
+              label="Confirm new password"
+              type="password"
               placeholder="Repeat your password"
               value={confirmPassword}
-              onChange={(e) => { setConfirmPassword(e.target.value); setPassErrors({}); }}
-              error={passErrors.confirmPassword} required
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setPassErrors({});
+              }}
+              error={passErrors.confirmPassword}
+              required
             />
             <Button type="submit" fullWidth loading={loading}>
               Reset password
@@ -214,9 +253,11 @@ export default function ForgotPasswordPage() {
       {/* ── Step: Done ── */}
       {step === "done" && (
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 
+          <div
+            className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 
                           border-emerald-500/30 flex items-center justify-center 
-                          mx-auto mb-6">
+                          mx-auto mb-6"
+          >
             <span className="text-3xl">✓</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-100 tracking-tight mb-3">
@@ -226,11 +267,12 @@ export default function ForgotPasswordPage() {
             Your password has been updated. Sign in with your new credentials.
           </p>
           <Link href="/login">
-            <Button variant="filled" fullWidth>Back to sign in</Button>
+            <Button variant="filled" fullWidth>
+              Back to sign in
+            </Button>
           </Link>
         </div>
       )}
-
     </div>
   );
 }

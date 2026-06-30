@@ -2,6 +2,7 @@ import { individualAssetServ } from "../../../Data Objects/DTO.js";
 import type {
   AssetAssignments,
   AssetAssignmentsRepository,
+  AssetAssignmentsResponse,
   AssetAssignmentsService,
   updateAssignmentDTO,
 } from "./asset_assignment.types.js";
@@ -36,11 +37,12 @@ export class AssetAssignmentServ implements AssetAssignmentsService {
   async editAssignment(
     assignmentId: string,
     newAssignmentDetails: updateAssignmentDTO,
+    userId: string,
   ): Promise<AssetAssignments> {
     try {
-      if (!assignmentId || !newAssignmentDetails)
+      if (!assignmentId || !newAssignmentDetails || !userId)
         throw new Error(
-          "Assignment id and assignment details must be provided",
+          "Assignment id, user id and assignment details must be provided",
         );
 
       if (!newAssignmentDetails.returned_at)
@@ -49,6 +51,7 @@ export class AssetAssignmentServ implements AssetAssignmentsService {
       const editedAssignment = await this.repo.editAssignment(
         assignmentId,
         newAssignmentDetails,
+        userId,
       );
 
       await individualAssetServ.editIndividualAsset(editedAssignment.asset_id, {
@@ -61,7 +64,7 @@ export class AssetAssignmentServ implements AssetAssignmentsService {
     }
   }
 
-  async getAssignments(assetId: string): Promise<AssetAssignments[]> {
+  async getAssignments(assetId: string): Promise<AssetAssignmentsResponse[]> {
     try {
       if (!assetId) throw new Error("Asset id not provided");
 
@@ -75,7 +78,7 @@ export class AssetAssignmentServ implements AssetAssignmentsService {
 
   async getDepartmentAssignments(
     departmentId: string,
-  ): Promise<AssetAssignments[]> {
+  ): Promise<AssetAssignmentsResponse[]> {
     try {
       if (!departmentId) throw new Error("Department id must be provided");
 

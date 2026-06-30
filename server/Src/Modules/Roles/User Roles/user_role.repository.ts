@@ -7,6 +7,7 @@ import type {
   UserSpecificRoles,
   UserSpecificRolesWithPermissions,
 } from "./user_role.types.js";
+import { userRolesServ } from "../../../Data Objects/DTO.js";
 
 export class UserRoleRepo implements UserRoleRepository {
   constructor(private db: Database) {}
@@ -28,9 +29,23 @@ export class UserRoleRepo implements UserRoleRepository {
     }
   }
 
+  async changeUserRole(userId: string, roleId: string): Promise<UserRole> {
+    try {
+      const currentUserRole = await userRolesServ.getUserRoles(userId);
+
+      await this.deleteUserRole(userId, currentUserRole.roles[0]!.id);
+
+      const newUserRole = await this.createUserRole(userId, roleId);
+
+      return newUserRole;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getUserRoles(userId: string): Promise<UserSpecificRoles> {
     try {
-      const sqlString = `SELECT r.name FROM user_roles ur INNER JOIN role r ON ur.role_id=r.id WHERE ur.user_id=$1`,
+      const sqlString = `SELECT r.id,r.name FROM user_roles ur INNER JOIN role r ON ur.role_id=r.id WHERE ur.user_id=$1`,
         sqlQuery = await this.db.query(sqlString, [userId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -81,7 +96,7 @@ export class UserRoleRepo implements UserRoleRepository {
 
     const getUserRoleResult = sqlQuery as QueryResult<UserSpecificRoles>,
       getUserRoles = getUserRoleResult.rows;
-
+    console.log(getUserRoles);
     return {
       userId: userId,
       roles: getUserRoles as any,

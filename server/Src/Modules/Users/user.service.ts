@@ -1,3 +1,4 @@
+import { hashPassword } from "../../Utilities/Hasher.js";
 import type { UserRepo } from "./user.repository.js";
 import type {
   createUserDTO,
@@ -34,6 +35,25 @@ export class UserServ implements UserService {
     }
   }
 
+  async switchDepartment(
+    departmentId: string,
+    userId: string,
+  ): Promise<PublicUser> {
+    try {
+      if (!departmentId || !userId)
+        throw new Error("Department id and user id must be provided");
+
+      const switchUserDepartment = await this.repo.switchDepartment(
+        departmentId,
+        userId,
+      );
+
+      return this.createPublicUser(switchUserDepartment);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async editUser(
     user_id: string,
     user_details: updateUserDTO,
@@ -56,7 +76,8 @@ export class UserServ implements UserService {
         if (!value || value.toString().length <= 0)
           throw new Error(`${key} has an invalid value`);
 
-        filteredUserDetails[key] = value;
+        if (key == "password") filteredUserDetails[key] = hashPassword(value);
+        else filteredUserDetails[key] = value;
       }
 
       if (Object.keys(filteredUserDetails).length <= 0)

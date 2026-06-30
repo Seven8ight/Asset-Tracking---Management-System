@@ -1,294 +1,323 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { departmentApi } from "../../../lib/api";
+import { useEffect, useState } from "react";
+import { departmentApi } from "@/lib/api";
+import { useAuth } from "@/app/_lib/context/AuthContext";
 
-interface Department {
+type FullDepartmentDetails = {
   id: string;
   name: string;
   description: string;
-  manager: string;
+  color: string;
+  manager_id: string;
   created_at: string;
-}
+  manager_name: string;
+};
+
+type DepartmentMember = {
+  id: string;
+  name: string;
+  username?: string;
+  email: string;
+  role_name?: string;
+};
+
+type ApiResponse<T> = {
+  response?: { message?: T };
+};
 
 export default function DepartmentsPage() {
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const [department, setDepartment] = useState<FullDepartmentDetails | null>(
+    null,
+  );
+  const [members, setMembers] = useState<DepartmentMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState("");
-
-  // Modal state — shared for create and edit
-  const [showModal, setShowModal] = useState(false);
-  const [editDept, setEditDept] = useState<Department | null>(null);
-  const [form, setForm] = useState({ name: "", description: "" });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+  const { user } = useAuth();
+  const [showEditModal, setShowEditModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    color: "#6366F1",
+  });
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
-
-  const fetchDepartments = async () => {
+  const fetchDepartment = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const data = await departmentApi.getAll();
-      setDepartments(Array.isArray(data) ? data : []);
+      // NOTE: assumes departmentApi exposes a way to resolve the current
+      // user's own department (e.g. via their session/JWT) rather than
+      // taking an arbitrary departmentId param. Adjust the call below to
+      // match whatever your api client actually exposes for "my department".
+      const data = (await departmentApi.getOne(
+        user!.department_id as string,
+      )) as ApiResponse<FullDepartmentDetails>;
+      const dept = data?.response?.message ?? null;
+      setDepartment(dept);
+
+      if (dept) {
+        const memberData = (await departmentApi.getAllUsers()) as ApiResponse<
+          DepartmentMember[]
+        >;
+        const allMembers = memberData?.response?.message;
+        setMembers(Array.isArray(allMembers) ? allMembers : []);
+      }
+
+      setError("");
     } catch (err) {
-      setApiError((err as Error).message);
+      setError((err as Error).message || "Failed to load department");
     } finally {
       setLoading(false);
     }
   };
 
-  const openCreateModal = () => {
-    setEditDept(null);
-    setForm({ name: "", description: "" });
-    setFormErrors({});
-    setShowModal(true);
+  useEffect(() => {
+    fetchDepartment();
+  }, []);
+
+  const openEditModal = () => {
+    if (!department) return;
+    setEditForm({
+      name: department.name,
+      description: department.description,
+      color: department.color,
+    });
+    setShowEditModal(true);
   };
 
-  const openEditModal = (dept: Department) => {
-    setEditDept(dept);
-    setForm({ name: dept.name, description: dept.description ?? "" });
-    setFormErrors({});
-    setShowModal(true);
+  const closeEditModal = () => {
+    setShowEditModal(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim()) {
-      setFormErrors({ name: "Department name is required" });
+  const saveDepartment = async () => {
+    if (!department) return;
+    if (!editForm.name.trim() || !editForm.description.trim()) {
+      setError("Name and description are required");
       return;
     }
 
     setSubmitting(true);
-    setApiError("");
-
     try {
-      if (editDept) {
-        // Edit existing department
-        const updated = await departmentApi.update(editDept.id, {
-          name: form.name.trim(),
-          description: form.description.trim(),
-        });
-        setDepartments((prev) =>
-          prev.map((d) => (d.id === editDept.id ? updated : d))
-        );
-      } else {
-        // Create new department
-        const created = await departmentApi.create({
-          name: form.name.trim(),
-          description: form.description.trim(),
-        });
-        setDepartments((prev) => [created, ...prev]);
-      }
-      setShowModal(false);
+      await departmentApi.update(department.id, {
+        name: editForm.name.trim(),
+        description: editForm.description.trim(),
+        color: editForm.color,
+      });
+
+      setShowEditModal(false);
+      await fetchDepartment();
     } catch (err) {
-      setApiError((err as Error).message);
+      setError((err as Error).message || "Failed to update department");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this department? This cannot be undone.")) return;
-    try {
-      await departmentApi.delete(id);
-      setDepartments((prev) => prev.filter((d) => d.id !== id));
-    } catch (err) {
-      setApiError((err as Error).message);
-    }
-  };
-
-  // Assign a color to each department card consistently
-  const COLORS = ["#6366F1", "#34D399", "#F59E0B", "#F87171", "#A78BFA", "#38BDF8"];
-  const getColor = (index: number) => COLORS[index % COLORS.length];
-
   return (
     <div className="flex flex-col gap-6">
-
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
-            Departments
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            {loading ? "Loading…" : `${departments.length} department${departments.length === 1 ? "" : "s"} registered.`}
-          </p>
-        </div>
-        <button onClick={openCreateModal}
-          className="px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600
-                     text-white text-sm font-semibold transition-colors">
-          + New Department
-        </button>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
+          My Department
+        </h1>
+        <p className="text-sm text-slate-400 mt-1">
+          Details for the department you belong to.
+        </p>
       </div>
 
-      {apiError && (
-        <div className="p-3 rounded-md text-sm bg-red-500/10 border
-                        border-red-500/20 text-red-300">
-          {apiError}
+      {error && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {error}
         </div>
       )}
 
-      {/* Loading skeleton */}
       {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-xl bg-[#1E293B] animate-pulse" />
-          ))}
+        <div className="rounded-xl border border-white/10 bg-[#1E293B] p-5 text-sm text-slate-400">
+          Loading department...
         </div>
       )}
 
-      {/* Empty state */}
-      {!loading && departments.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24
-                        rounded-xl bg-[#1E293B] border border-dashed border-white/10">
-          <div className="text-5xl mb-4">🏢</div>
-          <h3 className="text-lg font-semibold text-slate-200 mb-2">
-            No departments yet
-          </h3>
-          <p className="text-sm text-slate-400 text-center max-w-xs mb-6">
-            Create your first department to start organising your staff and assets.
-          </p>
-          <button onClick={openCreateModal}
-            className="px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600
-                       text-white text-sm font-semibold transition-colors">
-            + Create first department
-          </button>
+      {!loading && !department && !error && (
+        <div className="rounded-xl border border-white/10 bg-[#1E293B] p-5 text-sm text-slate-400">
+          You are not assigned to a department yet.
         </div>
       )}
 
-      {/* Department cards */}
-      {!loading && departments.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {departments.map((dept, index) => (
-            <div key={dept.id}
-              className="p-5 rounded-xl bg-[#1E293B] border border-white/5
-                         hover:border-white/10 transition-colors"
-              style={{ borderTop: `3px solid ${getColor(index)}` }}>
-
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-slate-100 text-base">
-                  {dept.name}
-                </h3>
-                {/* Actions menu */}
-                <div className="flex gap-2 flex-shrink-0">
-                  <button onClick={() => openEditModal(dept)}
-                    className="text-xs text-indigo-400 hover:text-indigo-300
-                               font-medium transition-colors">
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(dept.id)}
-                    className="text-xs text-red-400 hover:text-red-300
-                               font-medium transition-colors">
-                    Delete
-                  </button>
-                </div>
-              </div>
-
-              {dept.description && (
-                <p className="text-xs text-slate-400 leading-relaxed mb-4 line-clamp-2">
-                  {dept.description}
-                </p>
-              )}
-
-              <div className="pt-3 border-t border-white/5">
-                <p className="text-xs text-slate-500">
-                  Created{" "}
-                  <span className="text-slate-400">
-                    {new Date(dept.created_at).toLocaleDateString()}
-                  </span>
-                </p>
+      {!loading && department && (
+        <div className="flex flex-col gap-4">
+          {/* Department details card */}
+          <div
+            className="p-6 rounded-xl bg-[#1E293B] border border-white/5"
+            style={{ borderTop: `3px solid ${department.color}` }}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-100">
+                {department.name}
+              </h3>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-500">
+                  {department.color}
+                </span>
+                <button
+                  onClick={openEditModal}
+                  className="px-3 py-1.5 rounded-md border border-white/10
+                             text-xs text-slate-300 hover:text-white
+                             hover:border-white/20 transition-colors"
+                >
+                  Edit
+                </button>
               </div>
             </div>
-          ))}
+            <p className="text-sm text-slate-400 mb-5">
+              {department.description}
+            </p>
+            <div className="flex gap-6 pt-4 border-t border-white/5 text-xs text-slate-500">
+              <div>
+                <div className="text-slate-300">Manager</div>
+                <div className="text-slate-400">
+                  {department.manager_name || "Unknown"}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-300">Department ID</div>
+                <div className="text-slate-400">
+                  {department.id.slice(0, 8)}...
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-300">Created</div>
+                <div className="text-slate-400">
+                  {new Date(department.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Members list */}
+          <div className="rounded-xl bg-[#1E293B] border border-white/5 p-6">
+            <h3 className="text-sm font-semibold text-slate-100 mb-4">
+              Members ({members.length})
+            </h3>
+
+            {members.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                No other members in this department yet.
+              </p>
+            ) : (
+              <div className="flex flex-col divide-y divide-white/5">
+                {members.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                  >
+                    <div>
+                      <div className="text-sm text-slate-200">{m.name}</div>
+                      <div className="text-xs text-slate-500">{m.email}</div>
+                    </div>
+                    {m.role_name && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-slate-400">
+                        {m.role_name}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Create / Edit Modal */}
-      {showModal && (
+      {/* Edit department modal */}
+      {showEditModal && department && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowModal(false)} />
-
-          <div className="relative z-10 w-full max-w-md bg-[#1E293B]
-                          rounded-xl border border-white/10 shadow-2xl">
-            <div className="flex items-center justify-between p-6 border-b border-white/5">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeEditModal}
+          />
+          {/* Modal box */}
+          <div
+            className="relative z-10 w-full max-w-md bg-[#1E293B] 
+                          rounded-xl border border-white/10 p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-slate-100">
-                {editDept ? "Edit Department" : "Create Department"}
+                Edit Department
               </h2>
-              <button onClick={() => setShowModal(false)}
-                className="text-slate-500 hover:text-slate-300 transition-colors">
+              <button
+                onClick={closeEditModal}
+                className="text-slate-500 hover:text-slate-300 transition-colors"
+              >
                 ✕
               </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
-
-              {apiError && (
-                <div className="p-3 rounded-md bg-red-500/10 border border-red-500/20
-                                text-sm text-red-300">
-                  {apiError}
-                </div>
-              )}
-
+            <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-slate-300">
-                  Name <span className="text-indigo-400">*</span>
+                  Name
                 </label>
                 <input
-                  placeholder="e.g. IT Department, Facilities"
-                  value={form.name}
-                  onChange={(e) => {
-                    setForm((p) => ({ ...p, name: e.target.value }));
-                    if (formErrors.name)
-                      setFormErrors((p) => ({ ...p, name: "" }));
-                  }}
-                  className={`px-3.5 py-2.5 rounded-lg bg-[#0F172A] text-sm
-                    text-slate-200 placeholder:text-slate-600 outline-none border
-                    transition-all
-                    ${formErrors.name
-                      ? "border-red-500/40"
-                      : "border-white/5 focus:border-indigo-500/50"
-                    }`}
+                  placeholder="e.g. IT Department"
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className="px-3.5 py-2.5 rounded-lg bg-[#0F172A] border border-white/5
+                             text-sm text-slate-200 placeholder:text-slate-600
+                             focus:outline-none focus:border-indigo-500/50"
                 />
-                {formErrors.name && (
-                  <span className="text-xs text-red-400">{formErrors.name}</span>
-                )}
               </div>
-
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-slate-300">
-                  Description{" "}
-                  <span className="text-slate-600 font-normal">(optional)</span>
+                  Description
                 </label>
                 <textarea
                   rows={3}
                   placeholder="What does this department manage?"
-                  value={form.description}
-                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   className="px-3.5 py-2.5 rounded-lg bg-[#0F172A] border border-white/5
                              text-sm text-slate-200 placeholder:text-slate-600
-                             outline-none focus:border-indigo-500/50 resize-none transition-all"
+                             focus:outline-none focus:border-indigo-500/50 resize-none"
                 />
               </div>
-
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-slate-300">
+                  Color
+                </label>
+                <input
+                  type="color"
+                  value={editForm.color}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, color: e.target.value }))
+                  }
+                  className="h-10 w-full cursor-pointer rounded-lg bg-[#0F172A] border border-white/5 p-1"
+                />
+              </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-lg border border-white/10 text-sm
-                             text-slate-400 hover:border-white/20 transition-colors">
+                <button
+                  onClick={closeEditModal}
+                  disabled={submitting}
+                  className="flex-1 py-2.5 rounded-lg border border-white/10 
+                             text-sm text-slate-400 hover:text-slate-200 
+                             hover:border-white/20 transition-colors"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting}
+                <button
+                  onClick={saveDepartment}
+                  disabled={submitting}
                   className="flex-1 py-2.5 rounded-lg bg-indigo-500 hover:bg-indigo-600
-                             text-white text-sm font-semibold transition-colors
-                             disabled:opacity-50 disabled:cursor-not-allowed">
-                  {submitting
-                    ? "Saving…"
-                    : editDept ? "Save changes" : "Create department"
-                  }
+                             text-white text-sm font-semibold transition-colors"
+                >
+                  {submitting ? "Saving..." : "Save changes"}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

@@ -29,6 +29,7 @@ export interface UserRepository {
     userId: string,
     departmentId: string,
   ) => Promise<User>;
+  switchDepartment: (departmentId: string, userId: string) => Promise<User>;
   editUser: (userId: string, newDetails: updateUserDTO) => Promise<User>;
   getUser: (userId: string) => Promise<User>;
   deleteUser: (userId: string) => Promise<void>;
@@ -37,6 +38,10 @@ export interface UserService {
   assignUserToDepartment: (
     userId: string,
     departmentId: string,
+  ) => Promise<PublicUser>;
+  switchDepartment: (
+    departmentId: string,
+    userId: string,
   ) => Promise<PublicUser>;
   editUser: (userId: string, userDetails: createUserDTO) => Promise<PublicUser>;
   getUser: (userId: string) => Promise<PublicUser>;

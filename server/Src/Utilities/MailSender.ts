@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { RESEND_KEY } from "../Config/Env.js";
-import type { PublicUser, User } from "../Modules/Users/user.types.js";
+import type { PublicUser } from "../Modules/Users/user.types.js";
 import { userServ } from "../Data Objects/DTO.js";
 
 const resend = new Resend(RESEND_KEY);

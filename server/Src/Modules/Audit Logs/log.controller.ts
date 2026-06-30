@@ -22,20 +22,20 @@ export const AuditController = async (
     switch (request.method) {
       case "GET":
         const pathname = PathnameValidator(pathnames);
-        let requestbody: any;
+        let responseBody: any;
 
         if (pathname == "department") {
           await PermissionChecker(request, "audit", "View departmental logs");
-          requestbody = await service.getDepartmentLogs(user.departmentId);
+          responseBody = await service.getDepartmentLogs(user.departmentId);
         } else if (pathname == "all") {
           await PermissionChecker(request, "audit", "View all logs");
-          requestbody = await service.getLogs();
+          responseBody = await service.getLogs();
         } else {
           await PermissionChecker(request, "audit", "View log");
-          requestbody = await service.getLog(pathname);
+          responseBody = await service.getLog(pathname);
         }
 
-        sendResponseMessage(200, false, requestbody, response);
+        sendResponseMessage(200, false, responseBody, response);
 
         break;
       default:

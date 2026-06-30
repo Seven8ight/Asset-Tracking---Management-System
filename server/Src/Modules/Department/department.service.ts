@@ -98,12 +98,15 @@ export class DepartmentServ implements DepartmentService {
 
   async getUsersInDepartments(
     departmentId: string,
+    excludeUserId?: string,
   ): Promise<departmentmember[]> {
     try {
       if (!departmentId) throw new Error("Department id must be provided");
 
-      const departmentMembers =
-        await this.repo.getUsersInDepartments(departmentId);
+      const departmentMembers = await this.repo.getUsersInDepartments(
+        departmentId,
+        excludeUserId,
+      );
       return departmentMembers;
     } catch (error) {
       throw error;

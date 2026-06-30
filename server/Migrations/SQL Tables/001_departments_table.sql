@@ -3,6 +3,6 @@ CREATE TABLE departments(
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     color TEXT NOT NULL,
-    manager_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    manager_id UUID,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

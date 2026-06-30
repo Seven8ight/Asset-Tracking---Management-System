@@ -10,6 +10,10 @@ export type Log = {
   created_at: string;
 };
 
+export type LogResponse = Log & {
+  username: string;
+};
+
 export type createLogDTO = Omit<
   Log,
   "id" | "created_at" | "department_id" | "user_id"
@@ -21,9 +25,9 @@ export interface LogRepository {
     user_id: string,
     newDetails: createLogDTO,
   ) => Promise<Log>;
-  getLog: (logId: string) => Promise<Log>;
-  getLogs: () => Promise<Log[]>;
-  getDepartmentLogs: (department_id: string) => Promise<Log[]>;
+  getLog: (logId: string) => Promise<LogResponse>;
+  getLogs: () => Promise<LogResponse[]>;
+  getDepartmentLogs: (department_id: string) => Promise<LogResponse[]>;
 }
 
 export interface LogService {
@@ -32,7 +36,7 @@ export interface LogService {
     user_id: string,
     newDetails: createLogDTO,
   ) => Promise<Log>;
-  getLog: (logId: string) => Promise<Log>;
-  getLogs: () => Promise<Log[]>;
-  getDepartmentLogs: (department_id: string) => Promise<Log[]>;
+  getLog: (logId: string) => Promise<LogResponse>;
+  getLogs: () => Promise<LogResponse[]>;
+  getDepartmentLogs: (department_id: string) => Promise<LogResponse[]>;
 }

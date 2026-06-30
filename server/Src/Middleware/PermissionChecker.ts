@@ -56,28 +56,21 @@ export const PermissionChecker = async (
   permissionGroup: PermissionGroup,
   permissionName: PermissionName,
 ): Promise<void> => {
-  try {
-    const user = AuthValidator(request);
+  const user = AuthValidator(request);
 
-    const userRoles = await userRolesServ.getUserRolesWithPermissions(
-      user.userId,
-    );
-
-    const hasPermission = userRoles.roles.some((role) =>
-      role.permissions.some(
-        (permission) =>
-          permission.group_name === permissionGroup &&
-          permission.name === permissionName,
-      ),
-    );
-
-    if (!hasPermission) {
-      const error = new Error("Forbidden: user does not have permission");
-      throw error;
-    }
-
-    return;
-  } catch (error) {
-    throw error;
+  const userRoles = await userRolesServ.getUserRolesWithPermissions(
+    user.userId,
+  );
+  console.log(userRoles);
+  const hasPermission = userRoles.roles.some((role) =>
+    role.permissions.some(
+      (permission) =>
+        permission.group_name.trim() === permissionGroup.trim() &&
+        permission.name.trim() === permissionName.trim(),
+    ),
+  );
+  console.log(hasPermission);
+  if (!hasPermission) {
+    throw new Error("Forbidden: user does not have permission");
   }
 };

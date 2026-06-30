@@ -13,6 +13,7 @@ import {
 } from "../../Data Objects/DTO.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
 import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
+import { encode_access_token } from "../../Utilities/Jwt.js";
 
 export const DepartmentController = async (
   request: IncomingMessage,
@@ -41,10 +42,13 @@ export const DepartmentController = async (
         } else if (pathname == "allusers") {
           await PermissionChecker(
             request,
-            "department",
+            "users",
             "View all department users",
           );
-          requestBody = await service.getUsersInDepartments(user.departmentId);
+          requestBody = await service.getUsersInDepartments(
+            user.departmentId,
+            user.userId,
+          );
         } else {
           requestBody = await service.getDepartment(pathname);
         }
@@ -54,8 +58,6 @@ export const DepartmentController = async (
       case "POST":
         if (user.departmentId)
           throw new Error("User is already part of a department");
-
-        await PermissionChecker(request, "department", "Department creation");
 
         const postDepartmentDetails: any = await getRequestBody(request),
           newDepartment = await service.createDepartment(
@@ -67,7 +69,7 @@ export const DepartmentController = async (
 
         const roles = await rolesService.getRoles(),
           departmentRole = roles.find(
-            (role) => role.name.toLowerCase() == "saas admin",
+            (role) => role.name == "Department Manager",
           );
 
         await userRolesServ.createUserRole(user.userId, departmentRole!.id);
@@ -80,7 +82,10 @@ export const DepartmentController = async (
           new_values: newDepartment,
         });
 
-        sendResponseMessage(201, false, newDepartment, response);
+        const newDepartmentManager = await userServ.getUser(user.userId),
+          newDecodedTokens = encode_access_token(newDepartmentManager);
+
+        sendResponseMessage(201, false, newDecodedTokens, response);
         break;
       case "PATCH":
         await PermissionChecker(request, "department", "Department update");
@@ -128,6 +133,7 @@ export const DepartmentController = async (
         break;
     }
   } catch (error) {
+    console.log(error);
     sendResponseMessage(400, true, (error as Error).message, response);
   }
 };

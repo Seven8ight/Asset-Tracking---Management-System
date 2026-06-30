@@ -7,6 +7,10 @@ export type AssetAssignments = {
   returned_at: string;
 };
 
+export type AssetAssignmentsResponse = AssetAssignments & {
+  username: string;
+};
+
 export type createAssignmentDTO = Omit<AssetAssignments, "id" | "returned_at">;
 export type updateAssignmentDTO = Pick<AssetAssignments, "returned_at">;
 
@@ -19,11 +23,12 @@ export interface AssetAssignmentsRepository {
   editAssignment: (
     assignmentId: string,
     newAssignmentDetails: updateAssignmentDTO,
+    userId: string,
   ) => Promise<AssetAssignments>;
-  getAssignments: (assetId: string) => Promise<AssetAssignments[]>;
+  getAssignments: (assetId: string) => Promise<AssetAssignmentsResponse[]>;
   getDepartmentAssignments: (
     departmentId: string,
-  ) => Promise<AssetAssignments[]>;
+  ) => Promise<AssetAssignmentsResponse[]>;
 }
 
 export interface AssetAssignmentsService {
@@ -35,9 +40,10 @@ export interface AssetAssignmentsService {
   editAssignment: (
     assignmentId: string,
     newAssignmentDetails: updateAssignmentDTO,
+    userId: string,
   ) => Promise<AssetAssignments>;
-  getAssignments: (assetId: string) => Promise<AssetAssignments[]>;
+  getAssignments: (assetId: string) => Promise<AssetAssignmentsResponse[]>;
   getDepartmentAssignments: (
     departmentId: string,
-  ) => Promise<AssetAssignments[]>;
+  ) => Promise<AssetAssignmentsResponse[]>;
 }

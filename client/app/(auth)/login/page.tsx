@@ -3,23 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Logo from "../../components/ui/Logo";
-import Input from "../../components/ui/Input";
-import Button from "../../components/ui/Button";
-import { authApi, saveTokens, decodeToken } from "../../../lib/api";
-import { useAuth } from "../../context/AuthContext";
+import Logo from "../../_lib/ui/Logo";
+import Input from "../../_lib/ui/Input";
+import Button from "../../_lib/ui/Button";
+import { authApi, saveTokens } from "../../../lib/api";
+import { useAuth } from "../../_lib/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser } = useAuth();
+  const { refreshAuth } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  const setField = (field: string) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  const setField =
+    (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
       if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
       setApiError("");
@@ -37,7 +37,10 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
     setLoading(true);
     setApiError("");
@@ -49,21 +52,18 @@ export default function LoginPage() {
         password: form.password,
       });
 
-      // response = { accessToken, refreshToken }
-      saveTokens(response.accessToken, response.refreshToken);
+      const authPayload = response?.response?.message ?? response;
+      if (!authPayload?.accessToken || !authPayload?.refreshToken) {
+        throw new Error("Invalid login response shape");
+      }
 
-      // Decode the token to get user info
-      const decoded = decodeToken(response.accessToken);
-      setUser({
-        id: decoded.id,
-        department_id: decoded.department_id ?? null,
-        name: decoded.name,
-        email: decoded.email,
-        phone: decoded.phone,
-      });
+      // response = { accessToken, refreshToken }
+      saveTokens(authPayload.accessToken, authPayload.refreshToken);
+
+      const refreshedUser = await refreshAuth();
 
       // If user has no department yet, go to onboarding
-      if (!decoded.department_id) {
+      if (!refreshedUser?.department_id) {
         router.push("/onboarding");
       } else {
         router.push("/dashboard");
@@ -76,7 +76,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-md" style={{ animation: "fadeUp 0.4s ease both" }}>
+    <div
+      className="w-full max-w-md"
+      style={{ animation: "fadeUp 0.4s ease both" }}
+    >
       <div className="flex justify-center mb-8 lg:hidden">
         <Logo size="md" />
       </div>
@@ -91,29 +94,41 @@ export default function LoginPage() {
       </div>
 
       {apiError && (
-        <div className="mb-5 p-3 rounded-md text-sm bg-red-500/10
-                        border border-red-500/20 text-red-300">
+        <div
+          className="mb-5 p-3 rounded-md text-sm bg-red-500/10
+                        border border-red-500/20 text-red-300"
+        >
           {apiError}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <Input
-          id="email" label="Email address" type="email"
+          id="email"
+          label="Email address"
+          type="email"
           placeholder="you@strathmore.edu"
-          value={form.email} onChange={setField("email")}
-          error={errors.email} required
+          value={form.email}
+          onChange={setField("email")}
+          error={errors.email}
+          required
         />
         <div className="flex flex-col gap-1.5">
           <Input
-            id="password" label="Password" type="password"
+            id="password"
+            label="Password"
+            type="password"
             placeholder="Enter your password"
-            value={form.password} onChange={setField("password")}
-            error={errors.password} required
+            value={form.password}
+            onChange={setField("password")}
+            error={errors.password}
+            required
           />
           <div className="flex justify-end">
-            <Link href="/forgot-password"
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+            <Link
+              href="/forgot-password"
+              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
               Forgot password?
             </Link>
           </div>
@@ -129,11 +144,16 @@ export default function LoginPage() {
         <div className="flex-1 h-px bg-white/7" />
       </div>
 
-      <div className="p-4 rounded-md bg-indigo-500/5 border border-indigo-500/10
-                      text-sm text-slate-400 leading-relaxed">
+      <div
+        className="p-4 rounded-md bg-indigo-500/5 border border-indigo-500/10
+                      text-sm text-slate-400 leading-relaxed"
+      >
         <span className="font-medium text-slate-200">New to AssetFlow?</span>{" "}
         Ask your department manager for an invite, or{" "}
-        <Link href="/signup" className="text-indigo-400 font-medium hover:text-indigo-300">
+        <Link
+          href="/signup"
+          className="text-indigo-400 font-medium hover:text-indigo-300"
+        >
           create an account
         </Link>{" "}
         to register your department.
@@ -141,7 +161,10 @@ export default function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-indigo-400 font-medium hover:text-indigo-300">
+        <Link
+          href="/signup"
+          className="text-indigo-400 font-medium hover:text-indigo-300"
+        >
           Get started
         </Link>
       </p>

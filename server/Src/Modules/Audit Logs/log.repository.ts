@@ -1,6 +1,11 @@
 import type { QueryResult } from "pg";
 import type { Database } from "../../Config/Db.js";
-import type { createLogDTO, Log, LogRepository } from "./log.types.js";
+import type {
+  createLogDTO,
+  Log,
+  LogRepository,
+  LogResponse,
+} from "./log.types.js";
 
 export class LogRepo implements LogRepository {
   constructor(private db: Database) {}
@@ -34,14 +39,15 @@ export class LogRepo implements LogRepository {
     }
   }
 
-  async getLog(logId: string): Promise<Log> {
+  async getLog(logId: string): Promise<LogResponse> {
     try {
-      const sqlString: string = "SELECT * FROM audit_logs WHERE id=$1",
+      const sqlString: string =
+          "SELECT al.*,u.username FROM audit_logs al JOIN users u ON al.user_id=u.id WHERE id=$1",
         sqlQuery = await this.db.query(sqlString, [logId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const retrieveLogQuery = sqlQuery as QueryResult<Log>,
+      const retrieveLogQuery = sqlQuery as QueryResult<LogResponse>,
         retrievedLog = retrieveLogQuery.rows[0];
 
       return retrievedLog!;
@@ -50,15 +56,15 @@ export class LogRepo implements LogRepository {
     }
   }
 
-  async getDepartmentLogs(department_id: string): Promise<Log[]> {
+  async getDepartmentLogs(department_id: string): Promise<LogResponse[]> {
     try {
       const sqlString: string =
-          "SELECT * FROM audit_logs WHERE department_id=$1",
+          "SELECT al.*,u.username FROM audit_logs al JOIN users u ON al.user_id=u.id WHERE al.department_id=$1",
         sqlQuery = await this.db.query(sqlString, [department_id]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const retrieveBranchLogQuery = sqlQuery as QueryResult<Log>,
+      const retrieveBranchLogQuery = sqlQuery as QueryResult<LogResponse>,
         retrievedBranchLogs = retrieveBranchLogQuery.rows;
 
       return retrievedBranchLogs;
@@ -67,14 +73,15 @@ export class LogRepo implements LogRepository {
     }
   }
 
-  async getLogs(): Promise<Log[]> {
+  async getLogs(): Promise<LogResponse[]> {
     try {
-      const sqlString = "SELECT * FROM audit_logs",
+      const sqlString =
+          "SELECT al.*,u.username FROM audit_logs al JOIN users u ON al.user_id=u.id",
         sqlQuery = await this.db.query(sqlString, []);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const allLogsQuery = sqlQuery as QueryResult<Log>,
+      const allLogsQuery = sqlQuery as QueryResult<LogResponse>,
         allLogs = allLogsQuery.rows;
 
       return allLogs;

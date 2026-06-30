@@ -98,10 +98,28 @@ export class DepartmentRepo implements DepartmentRepository {
 
   async getUsersInDepartments(
     departmentId: string,
+    excludeUserId?: string,
   ): Promise<departmentmember[]> {
     try {
-      const sqlString: string = `SELECT name,email FROM users WHERE department_id=$1`,
-        sqlQuery = await this.db.query(sqlString, [departmentId]);
+      const sqlString: string = `
+          SELECT
+            u.id,
+            u.username AS name,
+            u.username,
+            u.email,
+            COALESCE(STRING_AGG(DISTINCT r.name, ', '), 'Member') AS role_name
+          FROM users u
+          LEFT JOIN user_roles ur ON ur.user_id = u.id
+          LEFT JOIN role r ON r.id = ur.role_id
+          WHERE u.department_id = $1
+            AND ($2::uuid IS NULL OR u.id <> $2)
+          GROUP BY u.id, u.username, u.email
+          ORDER BY u.username
+        `,
+        sqlQuery = await this.db.query(sqlString, [
+          departmentId,
+          excludeUserId ?? null,
+        ]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 

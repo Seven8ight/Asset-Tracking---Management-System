@@ -24,7 +24,10 @@ export class SocketIO implements SocketIOService {
         try {
           const token = socket.handshake.auth?.token as string | undefined;
 
-          if (!token) return next(new Error("Auth token not provided"));
+          if (!token) {
+            return next();
+            // return next(new Error("Auth token not provided"));
+          }
 
           const user = decode_access_token(token!);
           if (!(user as PublicUser).id)
@@ -40,7 +43,14 @@ export class SocketIO implements SocketIOService {
   }
 
   constructor(private server: Server) {
-    this.ioServer = new SocketServer({ connectTimeout: 4000 });
+    this.ioServer = new SocketServer({
+      connectTimeout: 4000,
+      cors: {
+        methods: ["POST", "GET", "PUT", "PATCH", "OPTIONS", "DELETE"],
+        origin: "http://localhost:3001",
+        credentials: true,
+      },
+    });
 
     this.establishMiddleware();
     this.ioServer.on("connection", (socket: Socket) => {

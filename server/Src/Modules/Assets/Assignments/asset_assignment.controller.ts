@@ -84,6 +84,7 @@ export const AssignmentsController = async (
           patchResponseBody = await service.editAssignment(
             patchAssignmentId,
             patchReqBody,
+            user.userId,
           );
 
         await logsServ.createLog(user.departmentId, user.userId, {

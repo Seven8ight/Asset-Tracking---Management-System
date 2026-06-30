@@ -8,6 +8,7 @@ export type UserRole = {
 export type UserSpecificRoles = {
   userId: string;
   roles: {
+    id: string;
     name: string;
   }[];
 };
@@ -33,6 +34,7 @@ export type createUserRoleDTO = Pick<UserRole, "user_id" | "role_id">;
 
 export interface UserRoleRepository {
   createUserRole: (userId: string, roleId: string) => Promise<UserRole>;
+  changeUserRole: (userId: string, roleId: string) => Promise<UserRole>;
   getUserRoles: (userId: string) => Promise<UserSpecificRoles>;
   deleteUserRole: (userId: string, roleId: string) => Promise<void>;
   getUserRolesWithPermissions: (
@@ -42,6 +44,7 @@ export interface UserRoleRepository {
 
 export interface UserRoleService {
   createUserRole: (userId: string, roleId: string) => Promise<UserRole>;
+  changeUserRole: (userId: string, roleId: string) => Promise<UserRole>;
   getUserRoles: (userId: string) => Promise<UserSpecificRoles>;
   deleteUserRole: (userId: string, roleId: string) => Promise<void>;
   getUserRolesWithPermissions: (

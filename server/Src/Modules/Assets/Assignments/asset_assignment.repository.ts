@@ -3,6 +3,7 @@ import type { Database } from "../../../Config/Db.js";
 import type {
   AssetAssignments,
   AssetAssignmentsRepository,
+  AssetAssignmentsResponse,
   updateAssignmentDTO,
 } from "./asset_assignment.types.js";
 
@@ -40,13 +41,15 @@ export class AssetAssignmentRepo implements AssetAssignmentsRepository {
   async editAssignment(
     assignmentId: string,
     newAssignmentDetails: updateAssignmentDTO,
+    userId: string,
   ): Promise<AssetAssignments> {
     try {
       const sqlString: string =
-          "UPDATE asset_assignments SET returned_at=$2 WHERE id=$1 RETURNING *",
+          "UPDATE asset_assignments SET returned_at=$2 WHERE id=$1 AND user_id=$3 RETURNING *",
         sqlQuery = await this.db.query(sqlString, [
           assignmentId,
           newAssignmentDetails.returned_at,
+          userId,
         ]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
@@ -54,21 +57,25 @@ export class AssetAssignmentRepo implements AssetAssignmentsRepository {
       const patchedAssignmentQuery = sqlQuery as QueryResult<AssetAssignments>,
         patchedAssignment = patchedAssignmentQuery.rows[0];
 
+      if (!patchedAssignment)
+        throw new Error("You can only return assignments assigned to you");
+
       return patchedAssignment!;
     } catch (error) {
       throw error;
     }
   }
 
-  async getAssignments(assetId: string): Promise<AssetAssignments[]> {
+  async getAssignments(assetId: string): Promise<AssetAssignmentsResponse[]> {
     try {
       const sqlString: string =
-          "SELECT * FROM asset_assignments WHERE asset_id=$1",
+          "SELECT aa.*,u.username FROM asset_assignments aa JOIN users u ON aa.user_id=u.id WHERE aa.asset_id=$1",
         sqlQuery = await this.db.query(sqlString, [assetId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
-      const assingmentsQuery = sqlQuery as QueryResult<AssetAssignments>,
+      const assingmentsQuery =
+          sqlQuery as QueryResult<AssetAssignmentsResponse>,
         assignments = assingmentsQuery.rows;
 
       return assignments;
@@ -79,16 +86,16 @@ export class AssetAssignmentRepo implements AssetAssignmentsRepository {
 
   async getDepartmentAssignments(
     departmentId: string,
-  ): Promise<AssetAssignments[]> {
+  ): Promise<AssetAssignmentsResponse[]> {
     try {
       const sqlString: string =
-          "SELECT * FROM asset_assignments WHERE department_id=$1",
+          "SELECT aa.*,u.username FROM asset_assignments aa JOIN users u ON aa.user_id=u.id WHERE aa.department_id=$1",
         sqlQuery = await this.db.query(sqlString, [departmentId]);
 
       if (!sqlQuery) throw new Error("SQL Query error");
 
       const departmentAssignmentsQuery =
-          sqlQuery as QueryResult<AssetAssignments>,
+          sqlQuery as QueryResult<AssetAssignmentsResponse>,
         departmentAssignments = departmentAssignmentsQuery.rows;
 
       return departmentAssignments;

@@ -26,6 +26,23 @@ export class UserRepo implements UserRepository {
     }
   }
 
+  async switchDepartment(departmentId: string, userId: string): Promise<User> {
+    try {
+      const sqlString =
+          "UPDATE users SET department_id=$1 WHERE id=$2 RETURNING *",
+        sqlQuery = await this.db.query(sqlString, [departmentId, userId]);
+
+      if (!sqlQuery) throw new Error("SQL Query error");
+
+      const updateQuery = sqlQuery as QueryResult<User>,
+        update = updateQuery.rows[0];
+
+      return update!;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async editUser(userId: string, newDetails: updateUserDTO): Promise<User> {
     try {
       let keys: string[] = [],

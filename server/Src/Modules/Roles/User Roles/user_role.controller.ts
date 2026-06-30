@@ -52,6 +52,20 @@ export const UserRoleController = async (
 
         sendResponseMessage(201, false, createUserRole, response);
         break;
+      case "PATCH":
+        const userToChangeId = PathnameValidator(pathnames),
+          newRoleId = pathnames[3];
+
+        if (!newRoleId)
+          return sendResponseMessage(200, false, "Provide role id", response);
+
+        const newUserRole = await service.changeUserRole(
+          userToChangeId,
+          newRoleId,
+        );
+
+        sendResponseMessage(200, false, newUserRole, response);
+        break;
       case "DELETE":
         const deleteRoleId = PathnameValidator(pathnames),
           beforeRevockation = await service.getUserRoles(user.userId);

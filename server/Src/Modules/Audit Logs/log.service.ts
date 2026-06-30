@@ -2,6 +2,7 @@ import type {
   createLogDTO,
   Log,
   LogRepository,
+  LogResponse,
   LogService,
 } from "./log.types.js";
 
@@ -49,7 +50,7 @@ export class LogServ implements LogService {
     }
   }
 
-  async getLog(logId: string): Promise<Log> {
+  async getLog(logId: string): Promise<LogResponse> {
     try {
       if (!logId) throw new Error("Log id must be provided");
 
@@ -61,7 +62,7 @@ export class LogServ implements LogService {
     }
   }
 
-  async getLogs(): Promise<Log[]> {
+  async getLogs(): Promise<LogResponse[]> {
     try {
       const allLogs = await this.repo.getLogs();
 
@@ -71,7 +72,7 @@ export class LogServ implements LogService {
     }
   }
 
-  async getDepartmentLogs(department_id: string): Promise<Log[]> {
+  async getDepartmentLogs(department_id: string): Promise<LogResponse[]> {
     try {
       if (!department_id) throw new Error("Branch id must be provided");
 

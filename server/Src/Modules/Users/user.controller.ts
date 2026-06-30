@@ -4,9 +4,14 @@ import {
   PathnameValidator,
   sendResponseMessage,
 } from "../../Utilities/HttpFunctions.js";
-import { userServ } from "../../Data Objects/DTO.js";
+import {
+  rolesService,
+  userRolesServ,
+  userServ,
+} from "../../Data Objects/DTO.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
 import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
+import { encode_access_token } from "../../Utilities/Jwt.js";
 
 export const UserController = async (
   request: IncomingMessage,
@@ -30,14 +35,36 @@ export const UserController = async (
 
         break;
       case "PATCH":
-        await PermissionChecker(request, "users", "Manage user roles");
+        if (pathnames[2] == "switch") {
+          const adminRole = (await rolesService.getRoles()).find(
+              (role) => role.name == "SaaS Admin",
+            ),
+            isUserAdmin = (
+              await userRolesServ.getUserRoles(user.userId)
+            ).roles.find((role) => role.id == adminRole!.id);
 
-        const patchUserDetails: any = await getRequestBody(request),
-          patchedUser = await service.editUser(user.userId, patchUserDetails);
+          if (!isUserAdmin)
+            throw new Error("You do not have permission to switch departments");
 
-        sendResponseMessage(201, false, patchedUser, response);
+          const departmentId = pathnames[3];
+          if (!departmentId) throw new Error("Invalid department id");
 
-        break;
+          const switchDepartment = await service.switchDepartment(
+              departmentId,
+              user.userId,
+            ),
+            encodeToken = encode_access_token(switchDepartment);
+
+          sendResponseMessage(200, false, encodeToken, response);
+        } else {
+          const patchUserDetails: any = await getRequestBody(request),
+            patchedUser = await service.editUser(user.userId, patchUserDetails);
+
+          sendResponseMessage(201, false, patchedUser, response);
+
+          break;
+        }
+
       case "DELETE":
         const userDeletionDetails = AuthValidator(request);
 
@@ -50,6 +77,7 @@ export const UserController = async (
         break;
     }
   } catch (error) {
+    console.log(error);
     switch ((error as Error).message) {
       case "Auth token not provided":
       case "Invalid auth token":

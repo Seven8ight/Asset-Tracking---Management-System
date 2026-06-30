@@ -9,15 +9,17 @@ export const Router = (
   const requestUrl = new URL(request.url!, `http://${request.headers.host}`),
     pathnames = requestUrl.pathname.split("/").filter(Boolean);
 
+  if (requestUrl.pathname.startsWith("/socket.io")) return;
   response.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS, DELETE, PATCH",
   );
   response.setHeader(
     "Access-Control-Allow-Headers",
-    "content-length,authorization,accept",
+    "content-type,content-length,authorization,accept",
   );
-  response.setHeader("Access-Control-Allow-Origins", "*");
+  response.setHeader("Access-Control-Allow-Origin", "http://localhost:3001");
+  response.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (request.method == "OPTIONS")
     return sendResponseMessage(204, false, "", response);

@@ -17,8 +17,11 @@ export type FullDepartmentDetails = {
 };
 
 export type departmentmember = {
+  id: string;
   name: string;
+  username?: string;
   email: string;
+  role_name?: string;
 };
 
 export type createDepartmentDTO = Omit<Department, "id" | "created_at">;
@@ -34,7 +37,10 @@ export interface DepartmentRepository {
     newDepartmentDetails: updateDepartmentDTO,
   ) => Promise<Department>;
   getDepartment: (departmentId: string) => Promise<FullDepartmentDetails>;
-  getUsersInDepartments: (departmentId: string) => Promise<departmentmember[]>;
+  getUsersInDepartments: (
+    departmentId: string,
+    excludeUserId?: string,
+  ) => Promise<departmentmember[]>;
   getAllDepartments: () => Promise<FullDepartmentDetails[]>;
   deleteDepartment: (departmentId: string) => Promise<void>;
 }
@@ -49,7 +55,10 @@ export interface DepartmentService {
     newDepartmentDetails: updateDepartmentDTO,
   ) => Promise<Department>;
   getDepartment: (departmentId: string) => Promise<FullDepartmentDetails>;
-  getUsersInDepartments: (departmentId: string) => Promise<departmentmember[]>;
+  getUsersInDepartments: (
+    departmentId: string,
+    excludeUserId?: string,
+  ) => Promise<departmentmember[]>;
   getAllDepartments: () => Promise<FullDepartmentDetails[]>;
   deleteDepartment: (departmentId: string) => Promise<void>;
 }

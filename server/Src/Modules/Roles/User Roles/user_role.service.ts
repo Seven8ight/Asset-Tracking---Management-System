@@ -24,6 +24,18 @@ export class UserRolesServ implements UserRoleService {
     }
   }
 
+  async changeUserRole(userId: string, roleId: string): Promise<UserRole> {
+    try {
+      if (!userId || !roleId) throw new Error("Invalid user id or role id");
+
+      const newUserRole = await this.repo.changeUserRole(userId, roleId);
+
+      return newUserRole;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getUserRoles(userId: string): Promise<UserSpecificRoles> {
     try {
       if (!userId) throw new Error("User id must be provided");
