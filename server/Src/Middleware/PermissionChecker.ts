@@ -61,7 +61,7 @@ export const PermissionChecker = async (
   const userRoles = await userRolesServ.getUserRolesWithPermissions(
     user.userId,
   );
-  console.log(userRoles);
+
   const hasPermission = userRoles.roles.some((role) =>
     role.permissions.some(
       (permission) =>
@@ -69,7 +69,7 @@ export const PermissionChecker = async (
         permission.name.trim() === permissionName.trim(),
     ),
   );
-  console.log(hasPermission);
+
   if (!hasPermission) {
     throw new Error("Forbidden: user does not have permission");
   }

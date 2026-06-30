@@ -18,7 +18,7 @@ export const Router = (
     "Access-Control-Allow-Headers",
     "content-type,content-length,authorization,accept",
   );
-  response.setHeader("Access-Control-Allow-Origin", "http://localhost:3001");
+  response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
   response.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (request.method == "OPTIONS")

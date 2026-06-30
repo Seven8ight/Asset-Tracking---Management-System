@@ -98,7 +98,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   // SaaS Admin-only: department switcher
   const isSaasAdmin = roles.includes("SaaS Admin");
-  console.log();
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [allDepartments, setAllDepartments] = useState<DepartmentOption[]>([]);
   const [switcherLoading, setSwitcherLoading] = useState(false);

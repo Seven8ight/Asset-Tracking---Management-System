@@ -96,7 +96,7 @@ export class UserRoleRepo implements UserRoleRepository {
 
     const getUserRoleResult = sqlQuery as QueryResult<UserSpecificRoles>,
       getUserRoles = getUserRoleResult.rows;
-    console.log(getUserRoles);
+
     return {
       userId: userId,
       roles: getUserRoles as any,

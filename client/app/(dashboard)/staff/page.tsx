@@ -92,8 +92,7 @@ export default function StaffPage() {
     password: "",
     role_id: "",
   });
-  console.log(user);
-  console.log(permissions);
+
   const loadStaff = async () => {
     setLoading(true);
     try {
@@ -189,7 +188,7 @@ export default function StaffPage() {
     const myRolesResponse =
       (await userRolesApi.getMyRolesWithPermissions()) as ApiResponse<UserRolesPermissionsPayload>;
     const myRoles = myRolesResponse?.response?.message?.roles ?? [];
-    console.log(myRoles);
+
     const canInvite = myRoles.some((role) =>
       (role.permissions ?? []).some(
         (permission) => permission.name === "Invite users",

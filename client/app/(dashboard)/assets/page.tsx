@@ -76,7 +76,7 @@ export default function AssetsPage() {
       console.log(`Connection established: ${socket.id}`),
     );
     fetchAssets();
-  }, []);
+  }, [user]);
 
   const fetchAssets = async () => {
     try {

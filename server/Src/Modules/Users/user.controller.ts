@@ -61,10 +61,8 @@ export const UserController = async (
             patchedUser = await service.editUser(user.userId, patchUserDetails);
 
           sendResponseMessage(201, false, patchedUser, response);
-
-          break;
         }
-
+        break;
       case "DELETE":
         const userDeletionDetails = AuthValidator(request);
 

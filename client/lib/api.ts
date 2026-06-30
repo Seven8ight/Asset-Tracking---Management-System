@@ -1,13 +1,8 @@
 import { getToken } from "./token";
-// import { cookies } from "next/headers";
 
-const BASE_URL = "http://localhost:5467";
+const BASE_URL = "http://localhost:3001";
 
-// Saves tokens after login/register
 export const saveTokens = async (accessToken: string, refreshToken: string) => {
-  // const cookie = await cookies();
-  // cookie.set("accessToken", accessToken);
-  // cookie.set("refreshToken", refreshToken);
   if (typeof window === "undefined") return;
   window.localStorage.setItem("accessToken", accessToken);
   window.localStorage.setItem("refreshToken", refreshToken);
@@ -241,7 +236,12 @@ export const userApi = {
   ) => apiFetch("/api/users", { method: "PATCH", body: JSON.stringify(body) }),
 
   switch: (departmentId: string) =>
-    apiFetch(`/api/users/switch/${departmentId}`, { method: "PATCH" }),
+    apiFetch(`/api/users/switch/${departmentId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        username: "hello",
+      }),
+    }),
 
   delete: () => apiFetch("/api/users", { method: "DELETE" }),
 };

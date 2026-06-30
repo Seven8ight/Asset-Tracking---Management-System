@@ -7,11 +7,10 @@ import {
   ReactNode,
   useEffect,
 } from "react";
-import { AuthProvider, AuthUser, useAuth } from "./AuthContext";
+import { AuthUser, useAuth } from "./AuthContext";
 import { userApi } from "@/lib/api";
 
 type AdminDepartmentContextType = {
-  // null = admin is viewing their own department (default / normal view)
   viewingDepartmentId: string | null;
   setViewingDepartmentId: (id: string | null) => void;
 };
@@ -28,17 +27,33 @@ export default function AdminDepartmentProvider({
   const [viewingDepartmentId, setViewingDepartmentId] = useState<string | null>(
       null,
     ),
-    { setUser } = useAuth();
+    { setUser, user } = useAuth();
 
   useEffect(() => {
-    setUser((current) => ({
-      ...(current as AuthUser),
-      department_id: viewingDepartmentId,
-    }));
+    setViewingDepartmentId(user?.department_id ?? null);
+  }, [user]);
 
+  useEffect(() => {
     const switchDepartment = async () => {
-      if (viewingDepartmentId != null)
-        await userApi.switch(viewingDepartmentId!);
+      if (viewingDepartmentId != null) {
+        if (viewingDepartmentId != user?.department_id) {
+          const update = await userApi.switch(viewingDepartmentId!);
+
+          localStorage.setItem(
+            "accessToken",
+            update.response.message.accessToken,
+          );
+          localStorage.setItem(
+            "refreshToken",
+            update.response.message.refreshToken,
+          );
+
+          setUser((current) => ({
+            ...(current as AuthUser),
+            department_id: viewingDepartmentId,
+          }));
+        }
+      }
     };
 
     switchDepartment();
