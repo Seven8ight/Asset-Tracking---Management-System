@@ -605,7 +605,7 @@ export default function AssetsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Live notification toasts */}
-      <div className="fixed top-4 right-4 z-[70] flex flex-col gap-2 w-full max-w-sm pointer-events-none">
+      <div className="fixed top-4 right-4 z-70 flex flex-col gap-2 w-full max-w-sm pointer-events-none">
         {notifications.map((n) => (
           <div
             key={n.id}

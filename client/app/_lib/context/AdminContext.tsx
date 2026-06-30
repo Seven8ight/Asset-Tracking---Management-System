@@ -8,7 +8,7 @@ import {
   useEffect,
 } from "react";
 import { AuthUser, useAuth } from "./AuthContext";
-import { userApi } from "@/lib/api";
+import { saveTokens, userApi } from "@/lib/api";
 
 type AdminDepartmentContextType = {
   viewingDepartmentId: string | null;
@@ -39,12 +39,8 @@ export default function AdminDepartmentProvider({
         if (viewingDepartmentId != user?.department_id) {
           const update = await userApi.switch(viewingDepartmentId!);
 
-          localStorage.setItem(
-            "accessToken",
+          saveTokens(
             update.response.message.accessToken,
-          );
-          localStorage.setItem(
-            "refreshToken",
             update.response.message.refreshToken,
           );
 

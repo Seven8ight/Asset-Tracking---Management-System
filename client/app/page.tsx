@@ -168,7 +168,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <p className="text-center text-xs relative top-20 mt-10 text-slate-500 mt-8">
+          <p className="text-center text-xs relative top-20 mt-10 text-slate-500">
             4 system roles ship out of the box, plus unlimited custom roles with
             their own defined permissions.
           </p>

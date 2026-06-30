@@ -18,7 +18,10 @@ import {
   sendPasswordReset,
 } from "../../Utilities/MailSender.js";
 import { AuthValidator } from "../../Middleware/AuthChecker.js";
-import { decode_access_token } from "../../Utilities/Jwt.js";
+import {
+  decode_access_token,
+  encode_access_token,
+} from "../../Utilities/Jwt.js";
 import type { PublicUser } from "../Users/user.types.js";
 import { PermissionChecker } from "../../Middleware/PermissionChecker.js";
 
@@ -38,7 +41,8 @@ export const AuthenticationController = async (
       requestPath == "register" ||
       requestPath == "login" ||
       requestPath == "refresh" ||
-      requestPath == "invite"
+      requestPath == "invite" ||
+      requestPath == "passwordreset"
     ) {
       if (request.method != "POST")
         return sendResponseMessage(405, true, "Use POST instead", response);
@@ -132,22 +136,28 @@ export const AuthenticationController = async (
         sendResponseMessage(200, false, invitedUser, response);
         break;
       case "passwordreset":
-        const userRequesting = AuthValidator(request),
-          findUser = await userServ.getUser(userRequesting.userId);
+        const requestEmail: any = await getRequestBody(request);
 
-        await sendPasswordReset(findUser, `${REDIRECT_URL}/forgot-password`);
+        if (!requestEmail) {
+          sendResponseMessage(400, true, "Email not provided", response);
+          return;
+        }
 
-        await logsServ.createLog(
-          userRequesting.departmentId,
-          userRequesting.userId,
-          {
-            entity_id: userRequesting.userId,
-            entity_type: "User",
-            action: `Password reset`,
-            old_values: {},
-            new_values: {},
-          },
+        const findUser = await userServ.getUserByEmail(requestEmail.email),
+          newUserToken = encode_access_token(findUser);
+
+        await sendPasswordReset(
+          findUser,
+          `${REDIRECT_URL}/resetpass?token=${newUserToken.refreshToken}`,
         );
+
+        await logsServ.createLog(findUser.department_id, findUser.id, {
+          entity_id: findUser.id,
+          entity_type: "User",
+          action: `Password reset`,
+          old_values: {},
+          new_values: {},
+        });
 
         sendResponseMessage(200, false, "Password reset email sent", response);
         break;

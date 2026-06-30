@@ -1,6 +1,7 @@
+import { ServerAPI } from "@/app/_lib/constants/globals";
 import { getToken } from "./token";
 
-const BASE_URL = "http://localhost:3001";
+const BASE_URL = ServerAPI;
 
 export const saveTokens = async (accessToken: string, refreshToken: string) => {
   if (typeof window === "undefined") return;
@@ -77,6 +78,14 @@ export const authApi = {
     apiFetch("/api/auth/refresh", {
       method: "POST",
       body: JSON.stringify({ refresh_token }),
+    }),
+
+  resetPassword: (email: string) =>
+    apiFetch(`/api/auth/passwordreset`, {
+      method: "POST",
+      body: JSON.stringify({
+        email: email,
+      }),
     }),
 
   invite: (body: {

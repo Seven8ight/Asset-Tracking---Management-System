@@ -69,6 +69,22 @@ export class UserRepo implements UserRepository {
     }
   }
 
+  async getUserByEmail(email: string): Promise<User> {
+    try {
+      const sqlString: string = "SELECT * FROM users WHERE email=$1",
+        sqlQuery = await this.db.query(sqlString, [email]);
+
+      if (!sqlQuery) throw new Error("SQL Query invalid");
+
+      const userQuery = sqlQuery as QueryResult<User>,
+        user = userQuery.rows[0];
+
+      return user!;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getUser(userId: string): Promise<User> {
     try {
       const sqlString = `SELECT * FROM users WHERE id=$1`,

@@ -17,7 +17,7 @@ export const RolePermissionController = async (
   const service = rolePermissionServ;
 
   try {
-    const userDetails = AuthValidator(request);
+    AuthValidator(request);
 
     switch (request.method) {
       case "GET":

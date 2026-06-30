@@ -94,6 +94,14 @@ export class UserServ implements UserService {
     }
   }
 
+  async getUserByEmail(email: string): Promise<PublicUser> {
+    if (!email) throw new Error("Email is not provided");
+
+    const user = await this.repo.getUserByEmail(email);
+
+    return user;
+  }
+
   async getUser(user_id: string): Promise<PublicUser> {
     try {
       if (!user_id) throw new Error("User id must be provided");
