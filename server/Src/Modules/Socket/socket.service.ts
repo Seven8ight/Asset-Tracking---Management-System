@@ -8,6 +8,7 @@ import {
   individualAssetServ,
   userServ,
 } from "../../Data Objects/DTO.js";
+import { REDIRECT_URL } from "../../Config/Env.js";
 
 /*
     1. Ownership change to asset as per the department
@@ -46,7 +47,7 @@ export class SocketIO implements SocketIOService {
       connectTimeout: 4000,
       cors: {
         methods: ["POST", "GET", "PUT", "PATCH", "OPTIONS", "DELETE"],
-        origin: "http://localhost:3000",
+        origin: `${REDIRECT_URL}`,
         credentials: true,
       },
     });
