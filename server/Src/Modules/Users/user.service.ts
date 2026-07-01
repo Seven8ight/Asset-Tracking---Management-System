@@ -62,12 +62,7 @@ export class UserServ implements UserService {
       if (!user_id || !user_details)
         throw new Error("User id and new user details must be provided");
 
-      const allowedFields: string[] = [
-        "username",
-        "phone",
-        "email",
-        "password",
-      ];
+      const allowedFields: string[] = ["username", "email", "password"];
       let filteredUserDetails: Record<string, any> = {};
 
       for (let [key, value] of Object.entries(user_details)) {

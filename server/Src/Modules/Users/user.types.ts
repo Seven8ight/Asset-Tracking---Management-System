@@ -2,7 +2,6 @@ export type User = {
   id: string;
   department_id: string;
   username: string;
-  phone: string;
   email: string;
   password: string;
   last_login_at: string;
@@ -12,7 +11,7 @@ export type User = {
 
 export type createUserDTO = Pick<
   User,
-  "department_id" | "username" | "phone" | "email" | "password"
+  "department_id" | "username" | "email" | "password"
 >;
 
 export type updateUserDTO =
