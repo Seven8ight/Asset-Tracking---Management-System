@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { sendResponseMessage } from "./Src/Utilities/HttpFunctions.js";
 import { RouteController } from "./Routes.js";
+import { REDIRECT_URL } from "./Src/Config/Env.js";
 
 export const Router = (
   request: IncomingMessage,
@@ -18,7 +19,7 @@ export const Router = (
     "Access-Control-Allow-Headers",
     "content-type,content-length,authorization,accept",
   );
-  response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  response.setHeader("Access-Control-Allow-Origin", `${REDIRECT_URL}`);
   response.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (request.method == "OPTIONS")
