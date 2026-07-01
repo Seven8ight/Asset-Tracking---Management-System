@@ -6,10 +6,10 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex bg-[var(--bg-base)]">
+    <div className="min-h-screen flex bg-(--bg-base)">
       {/* Left decorative panel — hidden on mobile, shows on lg screens */}
       <div
-        className="hidden lg:flex flex-col w-[420px] flex-shrink-0
+        className="hidden lg:flex flex-col w-105 shrink-0
                       border-r border-white/7 bg-slate-900/50 p-12
                       relative overflow-hidden"
       >
