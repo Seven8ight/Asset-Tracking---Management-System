@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrations": "npx tsx ./Migrations/Migration.ts",
+    "migrations": "npx tsx ./Migrations/Migration.ts && npx tsx ./Migrations/Seed.ts",
     "dev": "npx tsx --watch Server.ts"
   },
   "keywords": [],
