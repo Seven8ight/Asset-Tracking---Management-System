@@ -56,8 +56,8 @@ export default function AuthLayout({
           {/* Stats at the bottom */}
           <div className="flex gap-8 mt-12">
             {[
-              { value: "500+", label: "Assets tracked" },
-              { value: "12", label: "Departments" },
+              { value: "100+", label: "Assets tracked" },
+              { value: "12+", label: "Departments" },
               { value: "99.9%", label: "Uptime" },
             ].map((s) => (
               <div key={s.label}>
