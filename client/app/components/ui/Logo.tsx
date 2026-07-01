@@ -11,14 +11,46 @@ export default function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
       {/* Icon box */}
       <div
         style={{ width: s.box, height: s.box }}
-        className="rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-400 
-                   flex items-center justify-center flex-shrink-0"
+        className="rounded-lg bg-linear-to-br from-indigo-500 to-indigo-400 
+                   flex items-center justify-center shrink-0"
       >
         <svg width={s.icon} height={s.icon} viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="8" height="8" rx="1.5" fill="white" opacity="0.9" />
-          <rect x="13" y="3" width="8" height="8" rx="1.5" fill="white" opacity="0.5" />
-          <rect x="3" y="13" width="8" height="8" rx="1.5" fill="white" opacity="0.5" />
-          <rect x="13" y="13" width="8" height="8" rx="1.5" fill="white" opacity="0.9" />
+          <rect
+            x="3"
+            y="3"
+            width="8"
+            height="8"
+            rx="1.5"
+            fill="white"
+            opacity="0.9"
+          />
+          <rect
+            x="13"
+            y="3"
+            width="8"
+            height="8"
+            rx="1.5"
+            fill="white"
+            opacity="0.5"
+          />
+          <rect
+            x="3"
+            y="13"
+            width="8"
+            height="8"
+            rx="1.5"
+            fill="white"
+            opacity="0.5"
+          />
+          <rect
+            x="13"
+            y="13"
+            width="8"
+            height="8"
+            rx="1.5"
+            fill="white"
+            opacity="0.9"
+          />
         </svg>
       </div>
       {/* Text */}
