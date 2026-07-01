@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "../../_lib/ui/Logo";
@@ -14,8 +14,8 @@ type RefreshPayload = {
   accessToken: string;
 };
 
-export const ResetPassword = (): React.ReactNode => {
-  const router = useRouter();
+// 1. The actual form component containing your reset password logic
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -228,6 +228,53 @@ export const ResetPassword = (): React.ReactNode => {
       </div>
     </div>
   );
-};
+}
 
-export default ResetPassword;
+// 2. Styled loading skeleton matching the layout/dimensions exactly
+function ResetPasswordLoading() {
+  return (
+    <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4 animate-pulse">
+      <div className="w-full max-w-sm">
+        {/* Logo Placeholder */}
+        <div className="flex justify-center mb-8">
+          <div className="h-8 w-24 bg-slate-800/60 rounded-md" />
+        </div>
+
+        {/* Card Placeholder */}
+        <div className="rounded-xl bg-[#1E293B] border border-white/5 p-6 space-y-5">
+          <div className="flex flex-col items-center gap-2 mb-2">
+            <div className="h-5 w-36 bg-slate-800 rounded" />
+            <div className="h-4 w-56 bg-slate-800/60 rounded" />
+          </div>
+
+          {/* Form Fields Placeholders */}
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <div className="h-4 w-24 bg-slate-800/70 rounded" />
+              <div className="h-10 w-full bg-[#0F172A] border border-white/5 rounded-lg" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="h-4 w-36 bg-slate-800/70 rounded" />
+              <div className="h-10 w-full bg-[#0F172A] border border-white/5 rounded-lg" />
+            </div>
+
+            {/* Submit Button Placeholder */}
+            <div className="h-10 w-full bg-slate-800/80 rounded-lg mt-2" />
+          </div>
+        </div>
+
+        {/* Footer Link Placeholder */}
+        <div className="mx-auto mt-6 h-4 w-48 bg-slate-800/40 rounded" />
+      </div>
+    </div>
+  );
+}
+
+// 3. Main exported Page Component protected with Suspense
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<ResetPasswordLoading />}>
+      <ResetPasswordForm />
+    </Suspense>
+  );
+}

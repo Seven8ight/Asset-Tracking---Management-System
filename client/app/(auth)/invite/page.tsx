@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "../../_lib/ui/Button";
 import Input from "../../_lib/ui/Input";
@@ -17,7 +17,8 @@ type RefreshPayload = {
   accessToken: string;
 };
 
-export default function InviteAcceptPage() {
+// 1. The actual form component containing your logic
+function InviteAcceptForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -169,5 +170,43 @@ export default function InviteAcceptPage() {
         </Button>
       </form>
     </div>
+  );
+}
+
+// 2. A matching skeleton UI to prevent layout shifts while Next.js parses the search params
+function InviteAcceptLoading() {
+  return (
+    <div className="w-full max-w-md animate-pulse">
+      {/* Back to sign in link placeholder */}
+      <div className="mb-8 h-4 w-28 rounded bg-slate-800" />
+
+      {/* Title & subtitle placeholders */}
+      <div className="mb-2 h-8 w-48 rounded bg-slate-800" />
+      <div className="mb-8 h-4 w-64 rounded bg-slate-800" />
+
+      {/* Form Fields placeholders */}
+      <div className="flex flex-col gap-5">
+        <div className="space-y-2">
+          <div className="h-4 w-24 rounded bg-slate-800" />
+          <div className="h-10 w-full rounded bg-slate-800/50" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 w-32 rounded bg-slate-800" />
+          <div className="h-10 w-full rounded bg-slate-800/50" />
+        </div>
+
+        {/* Button placeholder */}
+        <div className="mt-2 h-10 w-full rounded bg-slate-800" />
+      </div>
+    </div>
+  );
+}
+
+// 3. Main Page wrapper exported with the Suspense boundary
+export default function InviteAcceptPage() {
+  return (
+    <Suspense fallback={<InviteAcceptLoading />}>
+      <InviteAcceptForm />
+    </Suspense>
   );
 }
