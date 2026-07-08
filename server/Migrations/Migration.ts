@@ -318,7 +318,7 @@ const assignRolePermissions = async () => {
     }
 
     // --- Support Staff ---
-    if (pName === "Assign asset to self") {
+    if (pName === "Assign asset to self" || pName == "Declare asset broken") {
       await rolePermissionServ.createRPermission(
         supportStaffRole.id,
         permission.id,

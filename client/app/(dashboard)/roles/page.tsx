@@ -46,6 +46,7 @@ type UiRole = {
 };
 
 const ROLE_COLORS = ["#6366F1", "#F59E0B", "#34D399", "#F87171", "#38BDF8"];
+const HIDDEN_PERMISSION_GROUPS = ["department", "permissions"];
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<UiRole[]>([]);
@@ -239,6 +240,11 @@ export default function RolesPage() {
   const groupedPermissions = availablePermissions.reduce(
     (acc, permission) => {
       const key = permission.group_name || "other";
+
+      if (HIDDEN_PERMISSION_GROUPS.includes(key.trim().toLowerCase())) {
+        return acc;
+      }
+
       if (!acc[key]) acc[key] = [];
       acc[key].push(permission);
       return acc;

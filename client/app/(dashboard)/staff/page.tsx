@@ -71,6 +71,8 @@ const ROLE_STYLES: Record<string, string> = {
   "SaaS Admin": "bg-red-500/15 text-red-400",
 };
 
+const NON_ASSIGNABLE_ROLES = ["SaaS Admin"];
+
 export default function StaffPage() {
   const { user, hasPermission } = useAuth();
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -146,9 +148,13 @@ export default function StaffPage() {
       const response = (await rolesApi.getDepartmentRoles()) as ApiResponse<
         RoleOption[]
       >;
-      const roles = Array.isArray(response?.response?.message)
+      const allRoles = Array.isArray(response?.response?.message)
         ? response.response!.message!
         : [];
+
+      const roles = allRoles.filter(
+        (role) => !NON_ASSIGNABLE_ROLES.includes(role.name),
+      );
 
       setRoleOptions(roles);
       setRolesReadOnly(false);
@@ -163,11 +169,8 @@ export default function StaffPage() {
         (await userRolesApi.getMyRolesWithPermissions()) as ApiResponse<UserRolesPermissionsPayload>;
       const myRoles = myRolesResponse?.response?.message?.roles ?? [];
       const fallbackRoles = myRoles
-        .map((role) => ({
-          id: role.roleId,
-          name: role.roleName,
-        }))
-        .filter((role) => role.name != "SaaS Admin");
+        .map((role) => ({ id: role.roleId, name: role.roleName }))
+        .filter((role) => !NON_ASSIGNABLE_ROLES.includes(role.name));
 
       setRoleOptions(fallbackRoles);
       setRolesReadOnly(true);
