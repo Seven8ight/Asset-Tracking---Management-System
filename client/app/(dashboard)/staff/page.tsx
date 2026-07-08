@@ -548,47 +548,6 @@ export default function StaffPage() {
                   {saveError}
                 </div>
               )}
-
-              {/* Permissions */}
-              <div className="flex flex-col gap-4">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Permissions
-                </p>
-
-                {/* Assets group */}
-                <PermissionGroup
-                  label="Assets"
-                  items={[
-                    { key: "view", label: "View assets" },
-                    { key: "edit", label: "Edit assets" },
-                    { key: "delete", label: "Delete assets" },
-                  ]}
-                  values={selected.permissions.assets}
-                  onChange={(key) => togglePermission("assets", key)}
-                />
-
-                {/* Staff group */}
-                <PermissionGroup
-                  label="Staff"
-                  items={[
-                    { key: "view", label: "View staff" },
-                    { key: "edit", label: "Edit staff" },
-                  ]}
-                  values={selected.permissions.staff}
-                  onChange={(key) => togglePermission("staff", key)}
-                />
-
-                {/* Reports group */}
-                <PermissionGroup
-                  label="Reports"
-                  items={[
-                    { key: "view", label: "View reports" },
-                    { key: "export", label: "Export reports" },
-                  ]}
-                  values={selected.permissions.reports}
-                  onChange={(key) => togglePermission("reports", key)}
-                />
-              </div>
             </div>
 
             {/* Drawer footer */}
