@@ -35,13 +35,6 @@ type ToastNotification = {
   message: string;
 };
 
-const STATUS_STYLES: Record<UiStatus, string> = {
-  Available: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  "In Use": "bg-indigo-500/15 text-indigo-400 border-indigo-500/20",
-  Repaired: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  Broken: "bg-red-500/15 text-red-400 border-red-500/20",
-};
-
 // Used for the per-asset status count "bubbles" in the table — distinct from
 // STATUS_STYLES above since In Use is greyed out here per the requested key:
 // green = Available, grey = In Use, yellow = Repaired, red = Broken.
@@ -73,7 +66,7 @@ export default function AssetsPage() {
   >({});
   const socket = useSocketContext();
 
-  // Bumping this re-runs the asset/assignment fetch — used both for our own
+  // Bumping this re-runs the asset/assignment fetch — used both for our own, web socket retrieval here
   // mutations and whenever a socket event tells us something changed.
   const [change, setChange] = useState(0);
 

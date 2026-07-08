@@ -23,6 +23,7 @@ export type PermissionName =
   | "Invite users"
   | "Manage user roles"
   | "View all department users"
+  | "Delete a user"
 
   // Assets
   | "Create assets"

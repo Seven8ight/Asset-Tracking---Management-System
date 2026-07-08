@@ -126,6 +126,11 @@ const createPermissions = async () => {
       description:
         "Capability to view all users across all department within the tenant",
     },
+    {
+      name: "Delete a user",
+      group_name: "users",
+      description: "Capability to delete a user from a department",
+    },
 
     // Assets
     {
@@ -310,7 +315,10 @@ const assignRolePermissions = async () => {
     }
 
     // --- Maintenance Engineer ---
-    if (pName === "Declare asset broken") {
+    if (
+      pName === "Declare asset broken" ||
+      pName === "Declare asset repaired"
+    ) {
       await rolePermissionServ.createRPermission(
         maintenanceEngineerRole.id,
         permission.id,

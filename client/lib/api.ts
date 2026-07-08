@@ -252,7 +252,11 @@ export const userApi = {
       }),
     }),
 
-  delete: () => apiFetch("/api/users", { method: "DELETE" }),
+  delete: (userId: string) =>
+    apiFetch("/api/users", {
+      method: "DELETE",
+      body: JSON.stringify({ user_id: userId }),
+    }),
 };
 
 // ── Audit Logs ───────────────────────────────────────────

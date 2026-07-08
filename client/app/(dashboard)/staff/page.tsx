@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { authApi, departmentApi, rolesApi, userRolesApi } from "@/lib/api";
+import {
+  authApi,
+  userApi,
+  departmentApi,
+  rolesApi,
+  userRolesApi,
+} from "@/lib/api";
 import { useAuth } from "@/app/_lib/context/AuthContext";
 
 interface StaffMember {
@@ -94,6 +100,7 @@ export default function StaffPage() {
     password: "",
     role_id: "",
   });
+  const [deleteId, setDeleteId] = useState<string | null>("");
 
   const loadStaff = async () => {
     setLoading(true);
@@ -332,6 +339,28 @@ export default function StaffPage() {
     }
   };
 
+  const removeStaff = async (member: StaffMember) => {
+    if (!member.id) {
+      setError("Cannot remove staff: user id is missing.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Remove ${member.name} from ${departmentName}? This action cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeleteId(member.id);
+      await userApi.delete(member.id);
+      await loadStaff();
+    } catch (err) {
+      setError((err as Error).message || "Failed to remove staff member");
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -456,6 +485,8 @@ export default function StaffPage() {
                       Edit
                     </button>
                     <button
+                      onClick={() => removeStaff(s)}
+                      disabled={deleteId == s.id}
                       className="text-xs text-red-400 hover:text-red-300
                                        font-medium transition-colors"
                     >

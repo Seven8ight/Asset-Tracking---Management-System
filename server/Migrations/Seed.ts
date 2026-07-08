@@ -1,5 +1,6 @@
 import {
   authService,
+  DepartmentService,
   rolesService,
   userRolesServ,
 } from "../Src/Data Objects/DTO.js";
@@ -22,3 +23,9 @@ const SaaSadminRole = (await rolesService.getRoles()).find(
   ) as PublicUser;
 
 await userRolesServ.createUserRole(decodedAdminUser.id, SaaSadminRole.id);
+await DepartmentService.createDepartment(decodedAdminUser.id, {
+  name: "Admin Department",
+  color: "red",
+  description: "Admin department",
+  manager_id: decodedAdminUser.id,
+});

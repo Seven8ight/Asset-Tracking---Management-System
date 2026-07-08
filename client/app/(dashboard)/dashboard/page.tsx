@@ -26,6 +26,14 @@ const getUnitStatus = (item: BackendIndividualAsset): UnitStatus => {
   return "available";
 };
 
+function greetings() {
+  const date = new Date();
+
+  if (date.getHours() < 12) return "Good morning";
+  else if (date.getHours() < 18) return "Good afternoon";
+  else return "Good evening";
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const [assets, setAssets] = useState<ReturnType<typeof toUiAsset>[]>([]);
@@ -134,7 +142,7 @@ export default function DashboardPage() {
       {/* Greeting with real name */}
       <div>
         <h1 className="text-2xl font-bold text-slate-100 tracking-tight">
-          Good morning, {firstName} 👋
+          {greetings()}, {firstName} 👋
         </h1>
         <p className="text-sm text-slate-400 mt-1">
           Here&apos;s what&apos;s happening in your department today.

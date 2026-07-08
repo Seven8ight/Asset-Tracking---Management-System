@@ -64,9 +64,11 @@ export const UserController = async (
         }
         break;
       case "DELETE":
-        const userDeletionDetails = AuthValidator(request);
+        PermissionChecker(request, "users", "Delete a user");
 
-        await service.deleteUser(userDeletionDetails.userId);
+        const userToDelete: any = await getRequestBody(request);
+
+        await service.deleteUser(userToDelete.user_id);
 
         sendResponseMessage(204, false, "User deleted successfully", response);
         break;
@@ -75,7 +77,6 @@ export const UserController = async (
         break;
     }
   } catch (error) {
-    console.log(error);
     switch ((error as Error).message) {
       case "Auth token not provided":
       case "Invalid auth token":
